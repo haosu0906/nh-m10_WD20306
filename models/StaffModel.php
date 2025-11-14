@@ -1,10 +1,8 @@
 
 <?php
-require_once __DIR__ . '/../assets/configs/db.php';
 
-class StaffModel {
-    protected $pdo;
-    public function __construct(){ $this->pdo = DB::get(); }
+class StaffModel extends BaseModel {
+    public function __construct(){ parent::__construct(); }
 
     public function all(){
         $stmt = $this->pdo->query("SELECT * FROM users ORDER BY id DESC");

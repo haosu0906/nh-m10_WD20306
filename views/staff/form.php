@@ -23,16 +23,18 @@ $title = $editing ? 'Sửa nhân sự' : 'Thêm nhân sự';
   <div class="sidebar">
     <h3><i class="fas fa-map-marked-alt"></i> Quản trị Tripmate</h3>
     <nav class="nav flex-column">
-      <a class="nav-link" href="/base/?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
-      <a class="nav-link" href="/base/?r=tour_categories"><i class="fas fa-map"></i> Tours</a>
-      <a class="nav-link active" href="/base/?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=tour_categories"><i class="fas fa-layer-group"></i> Danh mục tour</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
+      <a class="nav-link active" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
     </nav>
   </div>
 
   <main class="main">
     <h3><?= $title ?></h3>
     <div class="card p-4">
-      <form method="post" action="<?= $editing ? '/base/?r=staff_update&id='.$item['id'] : '/base/?r=staff_store' ?>">
+      <form method="post" action="<?= $editing ? BASE_URL . '?r=staff_update&id='.$item['id'] : BASE_URL . '?r=staff_store' ?>">
         <div class="mb-3">
           <label class="form-label">Họ tên</label>
           <input class="form-control" type="text" name="full_name" required value="<?= $editing ? htmlspecialchars($item['full_name']) : '' ?>">
@@ -57,7 +59,7 @@ $title = $editing ? 'Sửa nhân sự' : 'Thêm nhân sự';
           </select>
         </div>
         <button class="btn btn-primary" type="submit">Lưu</button>
-        <a class="btn btn-secondary" href="/base/?r=staff">Hủy</a>
+        <a class="btn btn-secondary" href="<?= BASE_URL ?>?r=staff">Hủy</a>
       </form>
     </div>
   </main>

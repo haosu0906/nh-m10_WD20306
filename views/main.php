@@ -23,11 +23,11 @@
   <div class="sidebar">
     <h3><i class="fas fa-map-marked-alt"></i> Quản trị Tripmate</h3>
     <nav class="nav flex-column">
-      <a class="nav-link" href="/base/?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
-      <a class="nav-link" href="/base/?r=tour_categories"><i class="fas fa-map"></i> Tours</a>
-      <a class="nav-link" href="/base/?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
-      <a class="nav-link" href="/base/?r=schedules"><i class="fas fa-calendar-day"></i> Lịch Khởi Hành</a>
-      <a class="nav-link" href="/base/?r=bookings"><i class="fas fa-calendar-check"></i> Đặt Tour</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=tour_categories"><i class="fas fa-layer-group"></i> Danh mục tour</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
     </nav>
   </div>
 
@@ -41,21 +41,39 @@
       <h5>Chào mừng!</h5>
       <p>Hệ thống quản lý tour - Tripmate</p>
       <div class="row mt-3">
-        <div class="col-md-4">
+        <div class="col-md-3">
           <div class="card bg-light">
             <div class="card-body">
-              <h6><i class="fas fa-map"></i> Tours</h6>
-              <p class="small">Quản lý danh mục tour</p>
-              <a href="/base/?r=tour_categories" class="btn btn-sm btn-primary">Vào</a>
+              <h6><i class="fas fa-layer-group"></i> Danh mục tour</h6>
+              <p class="small">Tạo và phân loại tour</p>
+              <a href="<?= BASE_URL ?>?r=tour_categories" class="btn btn-sm btn-primary">Vào</a>
             </div>
           </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h6><i class="fas fa-route"></i> Tours</h6>
+              <p class="small">Quản lý thông tin chi tiết tour</p>
+              <a href="<?= BASE_URL ?>?r=tours" class="btn btn-sm btn-primary">Vào</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
           <div class="card bg-light">
             <div class="card-body">
               <h6><i class="fas fa-users"></i> Nhân Sự</h6>
               <p class="small">Quản lý nhân sự</p>
-              <a href="/base/?r=staff" class="btn btn-sm btn-primary">Vào</a>
+              <a href="<?= BASE_URL ?>?r=staff" class="btn btn-sm btn-primary">Vào</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h6><i class="fas fa-user-tie"></i> Hướng dẫn viên</h6>
+              <p class="small">Hồ sơ, phân loại và filter</p>
+              <a href="<?= BASE_URL ?>?r=guides" class="btn btn-sm btn-primary">Vào</a>
             </div>
           </div>
         </div>

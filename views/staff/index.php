@@ -19,16 +19,18 @@
   <div class="sidebar">
     <h3><i class="fas fa-map-marked-alt"></i> Quản trị Tripmate</h3>
     <nav class="nav flex-column">
-      <a class="nav-link" href="/base/?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
-      <a class="nav-link" href="/base/?r=tour_categories"><i class="fas fa-map"></i> Tours</a>
-      <a class="nav-link active" href="/base/?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=tour_categories"><i class="fas fa-layer-group"></i> Danh mục tour</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
+      <a class="nav-link active" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
     </nav>
   </div>
 
   <main class="main">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h3>Quản lý Nhân Sự</h3>
-      <a class="btn btn-success" href="/base/?r=staff_create">+ Thêm nhân sự</a>
+      <a class="btn btn-success" href="<?= BASE_URL ?>?r=staff_create">+ Thêm nhân sự</a>
     </div>
 
     <div class="card">
@@ -55,8 +57,8 @@
               <td><?= htmlspecialchars($row['role']) ?></td>
               <td><?= $row['is_active'] ? '<span class="badge bg-success">Hoạt động</span>' : '<span class="badge bg-danger">Vô hiệu</span>' ?></td>
               <td>
-                <a class="btn btn-sm btn-primary" href="/base/?r=staff_edit&id=<?= $row['id'] ?>">Sửa</a>
-                <a class="btn btn-sm btn-danger" href="/base/?r=staff_delete&id=<?= $row['id'] ?>" onclick="return confirm('Xác nhận xóa?')">Xóa</a>
+                <a class="btn btn-sm btn-primary" href="<?= BASE_URL ?>?r=staff_edit&id=<?= $row['id'] ?>">Sửa</a>
+                <a class="btn btn-sm btn-danger" href="<?= BASE_URL ?>?r=staff_delete&id=<?= $row['id'] ?>" onclick="return confirm('Xác nhận xóa?')">Xóa</a>
               </td>
             </tr>
             <?php endforeach; else: ?>

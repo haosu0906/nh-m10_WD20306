@@ -23,7 +23,7 @@ class BookingController {
 
     public function store(){
         // Xử lý đặt tour
-        header('Location: /base/?r=bookings');
+        header('Location: ' . BASE_URL . '?r=bookings');
         exit;
     }
 }

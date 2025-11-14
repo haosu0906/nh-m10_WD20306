@@ -1,6 +1,9 @@
 <?php
 $editing = isset($item) && !empty($item);
-$title = $editing ? 'Sửa tour' : 'Thêm tour';
+$title = $editing ? 'Sửa danh mục tour' : 'Thêm danh mục tour';
+$formAction = $editing ? BASE_URL . '?r=tour_categories_update&id='.$item['id'] : BASE_URL . '?r=tour_categories_store';
+$errors = $errors ?? [];
+$old = $old ?? [];
 ?>
 <!doctype html>
 <html lang="vi">
@@ -22,38 +25,54 @@ $title = $editing ? 'Sửa tour' : 'Thêm tour';
   <div class="sidebar">
     <h3><i class="fas fa-map-marked-alt"></i> Quản trị Tripmate</h3>
     <nav class="nav flex-column">
-      <a class="nav-link" href="/base/?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
-      <a class="nav-link active" href="/base/?r=tour_categories"><i class="fas fa-map"></i> Tours</a>
-      <a class="nav-link" href="/base/?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
+      <a class="nav-link active" href="<?= BASE_URL ?>?r=tour_categories"><i class="fas fa-map"></i> Danh mục tour</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
     </nav>
   </div>
 
   <main class="main">
     <h3><?= $title ?></h3>
     <div class="card p-4">
-      <form method="post" action="<?= $editing ? '/base/?r=tour_categories_update&id='.$item['id'] : '/base/?r=tour_categories_store' ?>">
+      <?php if (!empty($errors)): ?>
+        <div class="alert alert-danger">
+          <ul class="mb-0">
+            <?php foreach ($errors as $message): ?>
+              <li><?= htmlspecialchars($message) ?></li>
+            <?php endforeach; ?>
+          </ul>
+        </div>
+      <?php endif; ?>
+      <form method="post" action="<?= $formAction ?>">
         <div class="mb-3">
-          <label class="form-label">Tên tour</label>
-          <input class="form-control" type="text" name="title" required value="<?= $editing ? htmlspecialchars($item['title']) : '' ?>">
+          <label class="form-label">Tên danh mục <span class="text-danger">*</span></label>
+          <?php
+            $nameValue = $old['name'] ?? ($item['name'] ?? '');
+          ?>
+          <input class="form-control" type="text" name="name" required value="<?= htmlspecialchars($nameValue) ?>">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Loại tour <span class="text-danger">*</span></label>
+          <?php $selectedType = $old['category_type'] ?? ($item['category_type'] ?? 'domestic'); ?>
+          <select class="form-select" name="category_type" required>
+            <?php foreach ($types as $key => $label): ?>
+              <option value="<?= $key ?>" <?= $selectedType === $key ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
+            <?php endforeach; ?>
+          </select>
         </div>
         <div class="mb-3">
           <label class="form-label">Mô tả</label>
-          <textarea class="form-control" name="description" rows="4"><?= $editing ? htmlspecialchars($item['description']) : '' ?></textarea>
+          <?php
+            $descValue = $old['description'] ?? ($item['description'] ?? '');
+          ?>
+          <textarea class="form-control" name="description" rows="4"><?= htmlspecialchars($descValue) ?></textarea>
         </div>
-        <div class="mb-3">
-          <label class="form-label">Loại tour</label>
-          <input class="form-control" type="text" name="tour_type" value="<?= $editing ? htmlspecialchars($item['tour_type'] ?? '') : '' ?>">
+        <div class="d-flex gap-2">
+          <button class="btn btn-primary" type="submit">Lưu</button>
+          <a class="btn btn-secondary" href="<?= BASE_URL ?>?r=tour_categories">Hủy</a>
         </div>
-        <div class="mb-3">
-          <label class="form-label">Giá</label>
-          <input class="form-control" type="number" name="price" value="<?= $editing ? htmlspecialchars($item['price'] ?? '') : '' ?>">
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Trạng thái</label>
-          <input class="form-control" type="text" name="status" value="<?= $editing ? htmlspecialchars($item['status'] ?? '') : '' ?>">
-        </div>
-        <button class="btn btn-primary" type="submit">Lưu</button>
-        <a class="btn btn-secondary" href="/base/?r=tour_categories">Hủy</a>
       </form>
     </div>
   </main>

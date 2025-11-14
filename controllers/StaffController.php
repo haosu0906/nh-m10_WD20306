@@ -18,7 +18,7 @@ class StaffController {
 
     public function store(){
         $this->model->create($_POST);
-        header('Location: /?r=staff');
+        header('Location: ' . BASE_URL . '?r=staff');
         exit;
     }
 
@@ -29,13 +29,13 @@ class StaffController {
 
     public function update($id){
         $this->model->update($id, $_POST);
-        header('Location: /?r=staff');
+        header('Location: ' . BASE_URL . '?r=staff');
         exit;
     }
 
     public function delete($id){
         $this->model->delete($id);
-        header('Location: /?r=staff');
+        header('Location: ' . BASE_URL . '?r=staff');
         exit;
     }
 }
