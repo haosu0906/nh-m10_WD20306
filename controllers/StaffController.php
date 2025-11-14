@@ -1,0 +1,41 @@
+<?php
+
+require_once __DIR__ . '/../models/StaffModel.php';
+
+class StaffController {
+    protected $model;
+    public function __construct(){ $this->model = new StaffModel(); }
+
+    public function index(){
+        $items = $this->model->all();
+        require __DIR__ . '/../views/staff/index.php';
+    }
+
+    public function create(){
+        $item = null;
+        require __DIR__ . '/../views/staff/form.php';
+    }
+
+    public function store(){
+        $this->model->create($_POST);
+        header('Location: /?r=staff');
+        exit;
+    }
+
+    public function edit($id){
+        $item = $this->model->find($id);
+        require __DIR__ . '/../views/staff/form.php';
+    }
+
+    public function update($id){
+        $this->model->update($id, $_POST);
+        header('Location: /?r=staff');
+        exit;
+    }
+
+    public function delete($id){
+        $this->model->delete($id);
+        header('Location: /?r=staff');
+        exit;
+    }
+}
