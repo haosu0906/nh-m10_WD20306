@@ -14,7 +14,7 @@ my-static-site
 │   └── footer.html   # Footer component
 ├── css               # Stylesheets
 │   ├── main.css      # Main styles for the website
-│   └── variables.css  # CSS variables for consistent styling
+│   └── variables.css  # CSS variables for consistent stylingv
 ├── .gitignore        # Files and directories to ignore in version control
 └── README.md         # Documentation for the project
 ```

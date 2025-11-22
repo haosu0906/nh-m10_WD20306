@@ -8,6 +8,7 @@ require_once __DIR__ . '/../controllers/TourController.php';
 require_once __DIR__ . '/../controllers/GuidesController.php';
 require_once __DIR__ . '/../controllers/StaffController.php';
 require_once __DIR__ . '/../controllers/ScheduleController.php';
+require_once __DIR__ . '/../controllers/admin/booking.php';
 
 $catController = new TourCategoryController();
 $tourController = new TourController();
@@ -106,6 +107,14 @@ switch ($route) {
         $scheduleController->update($_GET['id'] ?? 0); break;
     case 'schedules_delete':
         $scheduleController->delete($_GET['id'] ?? 0); break;
+
+
+    //Booking
+
+    case "booking": booking_index(); break;
+    case "booking_detail": booking_detail(); break;
+    case "booking_update_status": booking_update_status(); break;
+
 
     case 'home':
     default:
