@@ -1,8 +1,9 @@
 <?php
 
-define('BASE_URL',          'http://localhost/base/');
+define('BASE_URL',          'http://localhost/ggg/nh-m10_WD20306/');
 
-define('PATH_ROOT',         __DIR__ . '/../');
+// Thư mục gốc của project: nh-m10_WD20306/
+define('PATH_ROOT',         __DIR__ . '/../..' . '/');
 
 define('PATH_VIEW',         PATH_ROOT . 'views/');
 

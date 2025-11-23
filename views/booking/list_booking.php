@@ -83,6 +83,11 @@
                 <h3>Quản lý Booking</h3>
                 <p class="text-muted mb-0">Theo dõi và quản lý tình trạng booking</p>
             </div>
+            <div>
+                <a href="<?= BASE_URL ?>?r=booking_create" class="btn btn-primary">
+                    + Tạo booking mới
+                </a>
+            </div>
         </div>
 
         <!-- Form lọc trạng thái -->
@@ -106,7 +111,7 @@
                     <thead class="table-light">
                         <tr>
                             <th>ID</th>
-                            <th>User ID</th>
+                            <th>Customer ID</th>
                             <th>Tour ID</th>
                             <th>Ngày đặt</th>
                             <th>Trạng thái</th>
@@ -117,9 +122,9 @@
                         <?php if(!empty($items)): foreach($items as $b): ?>
                         <tr>
                             <td><?= htmlspecialchars($b['id']) ?></td>
-                            <td><?= htmlspecialchars($b['user_id']) ?></td>
+                            <td><?= htmlspecialchars($b['customer_user_id']) ?></td>
                             <td><?= htmlspecialchars($b['tour_id']) ?></td>
-                            <td><?= !empty($b['booking_date']) ? date('d/m/Y', strtotime($b['booking_date'])) : '---' ?>
+                            <td><?= !empty($b['date_booked']) ? date('d/m/Y', strtotime($b['date_booked'])) : '---' ?>
                             </td>
                             <td>
                                 <?php
@@ -129,7 +134,7 @@
                                         'completed' => 'Hoàn tất',
                                         'canceled' => 'Hủy'
                                     ];
-                                    echo $statusLabels[$b['status']] ?? $b['status'];
+                                    echo $statusLabels[$b['booking_status']] ?? $b['booking_status'];
                                 ?>
                             </td>
                             <td>
