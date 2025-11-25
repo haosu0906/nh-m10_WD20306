@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../assets/configs/db.php';
+// booking
 
 /**
  * Lấy tất cả booking, có thể filter theo status
