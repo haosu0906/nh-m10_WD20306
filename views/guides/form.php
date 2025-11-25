@@ -42,6 +42,7 @@ $selectedType = $old['guide_type'] ?? ($guide['guide_type'] ?? 'domestic');
       <a class="nav-link" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
       <a class="nav-link active" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
       <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
+       <a class="nav-link active" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
     </nav>
   </div>
 
@@ -69,7 +70,7 @@ $selectedType = $old['guide_type'] ?? ($guide['guide_type'] ?? 'domestic');
         </div>
         <div class="col-md-6">
           <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
-          <input type="tel" pattern="[0-9]{9,11}" title="SĐT 9-11 số" name="phone" class="form-control" required value="<?= $value('phone') ?>">
+          <input type="text" name="phone" class="form-control" required value="<?= $value('phone') ?>">
         </div>
         <div class="col-md-6">
           <label class="form-label">Email <span class="text-danger">*</span></label>
@@ -82,22 +83,6 @@ $selectedType = $old['guide_type'] ?? ($guide['guide_type'] ?? 'domestic');
         <div class="col-md-6">
           <label class="form-label">Số chứng chỉ</label>
           <input type="text" name="certificate_no" class="form-control" value="<?= $value('certificate_no') ?>">
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Ngôn ngữ</label>
-          <input type="text" name="languages" class="form-control" placeholder="Tiếng Việt, English" value="<?= $value('languages') ?>">
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Kinh nghiệm (năm)</label>
-          <input type="number" min="0" name="experience_years" class="form-control" value="<?= $value('experience_years', 0) ?>">
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Lộ trình chuyên môn</label>
-          <input type="text" name="specialized_route" class="form-control" value="<?= $value('specialized_route') ?>">
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Tình trạng sức khỏe</label>
-          <input type="text" name="health_status" class="form-control" value="<?= $value('health_status') ?>">
         </div>
         <div class="col-md-6">
           <label class="form-label">Loại HDV</label>

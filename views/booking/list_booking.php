@@ -83,20 +83,30 @@
                 <h3>Quản lý Booking</h3>
                 <p class="text-muted mb-0">Theo dõi và quản lý tình trạng booking</p>
             </div>
+            <div>
+                <a href="<?= BASE_URL ?>?r=booking_create" class="btn btn-primary">
+                    + Tạo booking mới
+                </a>
+            </div>
         </div>
 
         <!-- Form lọc trạng thái -->
         <form method="get" class="mb-3">
             <input type="hidden" name="r" value="booking">
-            <select name="status" class="form-select w-25" onchange="this.form.submit()">
-                <option value="">Tất cả</option>
-                <option value="pending" <?= (($_GET['status'] ?? '') === 'pending') ? 'selected' : '' ?>>Chờ xác nhận
-                </option>
-                <option value="deposit" <?= (($_GET['status'] ?? '') === 'deposit') ? 'selected' : '' ?>>Đã cọc</option>
-                <option value="completed" <?= (($_GET['status'] ?? '') === 'completed') ? 'selected' : '' ?>>Hoàn tất
-                </option>
-                <option value="canceled" <?= (($_GET['status'] ?? '') === 'canceled') ? 'selected' : '' ?>>Hủy</option>
-            </select>
+            <div class="d-flex gap-2 align-items-center">
+                <select name="status" class="form-select w-25" onchange="this.form.submit()">
+                    <option value="">Tất cả</option>
+                    <option value="pending" <?= (($_GET['status'] ?? '') === 'pending') ? 'selected' : '' ?>>Chờ xác nhận</option>
+                    <option value="deposit" <?= (($_GET['status'] ?? '') === 'deposit') ? 'selected' : '' ?>>Đã cọc</option>
+                    <option value="completed" <?= (($_GET['status'] ?? '') === 'completed') ? 'selected' : '' ?>>Hoàn tất</option>
+                    <option value="canceled" <?= (($_GET['status'] ?? '') === 'canceled') ? 'selected' : '' ?>>Hủy</option>
+                </select>
+
+                <label class="form-check-label ms-2 d-flex align-items-center" style="gap:.4rem;">
+                    <input type="checkbox" name="special" value="1" onchange="this.form.submit()" class="form-check-input" <?= (isset($_GET['special']) && $_GET['special']==='1') ? 'checked' : '' ?>>
+                    Chỉ khách có yêu cầu đặc biệt
+                </label>
+            </div>
         </form>
 
         <!-- Table danh sách booking -->
@@ -106,10 +116,11 @@
                     <thead class="table-light">
                         <tr>
                             <th>ID</th>
-                            <th>User ID</th>
+                            <th>Customer ID</th>
                             <th>Tour ID</th>
                             <th>Ngày đặt</th>
                             <th>Trạng thái</th>
+                            <th>Yêu cầu đặc biệt</th>
                             <th>Hành động</th>
                         </tr>
                     </thead>
@@ -117,9 +128,9 @@
                         <?php if(!empty($items)): foreach($items as $b): ?>
                         <tr>
                             <td><?= htmlspecialchars($b['id']) ?></td>
-                            <td><?= htmlspecialchars($b['user_id']) ?></td>
+                            <td><?= htmlspecialchars($b['customer_user_id']) ?></td>
                             <td><?= htmlspecialchars($b['tour_id']) ?></td>
-                            <td><?= !empty($b['booking_date']) ? date('d/m/Y', strtotime($b['booking_date'])) : '---' ?>
+                            <td><?= !empty($b['date_booked']) ? date('d/m/Y', strtotime($b['date_booked'])) : '---' ?>
                             </td>
                             <td>
                                 <?php
@@ -129,17 +140,23 @@
                                         'completed' => 'Hoàn tất',
                                         'canceled' => 'Hủy'
                                     ];
-                                    echo $statusLabels[$b['status']] ?? $b['status'];
+                                    echo $statusLabels[$b['booking_status']] ?? $b['booking_status'];
                                 ?>
                             </td>
                             <td>
-                                <a class="btn btn-sm btn-primary"
-                                    href="<?= BASE_URL ?>?r=booking_detail&id=<?= $b['id'] ?>">Chi tiết</a>
+                                <?php if (!empty($b['has_special']) && $b['has_special'] > 0): ?>
+                                    <span class="badge bg-warning text-dark">Có</span>
+                                <?php else: ?>
+                                    -
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <a class="btn btn-sm btn-primary" href="<?= BASE_URL ?>?r=booking_detail&id=<?= $b['id'] ?>">Chi tiết</a>
                             </td>
                         </tr>
                         <?php endforeach; else: ?>
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-3">Chưa có dữ liệu</td>
+                            <td colspan="7" class="text-center text-muted py-3">Chưa có dữ liệu</td>
                         </tr>
                         <?php endif; ?>
                     </tbody>

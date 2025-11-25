@@ -2,7 +2,8 @@
 
 define('BASE_URL',          'http://localhost/Du-an_1/nh-m10_WD20306-main/');
 
-define('PATH_ROOT',         __DIR__ . '/../');
+// Thư mục gốc của project: nh-m10_WD20306/
+define('PATH_ROOT',         __DIR__ . '/../..' . '/');
 
 define('PATH_VIEW',         PATH_ROOT . 'views/');
 

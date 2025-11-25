@@ -108,13 +108,25 @@ switch ($route) {
     case 'schedules_delete':
         $scheduleController->delete($_GET['id'] ?? 0); break;
 
-
     //Booking
 
-    case "booking": booking_index(); break;
-    case "booking_detail": booking_detail(); break;
-    case "booking_update_status": booking_update_status(); break;
-
+    case "booking":
+        booking_index();
+        break;
+    case "booking_create":
+        booking_create();
+        break;
+    case "booking_store":
+        if ($method === 'POST') {
+            booking_store();
+        }
+        break;
+    case "booking_detail":
+        booking_detail();
+        break;
+    case "booking_update_status":
+        booking_update_status();
+        break;
 
     case 'home':
     default:
