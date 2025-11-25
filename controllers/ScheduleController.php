@@ -15,8 +15,19 @@ class ScheduleController {
     }
 
     public function index(){
-        $schedules = $this->scheduleModel->all();
+        $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
+        if ($tourId > 0) {
+            $schedules = $this->scheduleModel->getByTour($tourId);
+        } else {
+            $schedules = $this->scheduleModel->all();
+        }
         require __DIR__ . '/../views/schedules/index.php';
+    }
+
+    // Lịch khởi hành dạng calendar
+    public function calendar(){
+        $schedules = $this->scheduleModel->all();
+        require __DIR__ . '/../views/schedules/calendar.php';
     }
 
     public function create(){

@@ -97,6 +97,8 @@ switch ($route) {
 
     case 'schedules':
         $scheduleController->index(); break;
+    case 'schedules_calendar':
+        $scheduleController->calendar(); break;
     case 'schedules_create':
         $scheduleController->create(); break;
     case 'schedules_store':

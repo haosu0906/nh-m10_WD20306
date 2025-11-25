@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Quản lý Lịch tour</title>
+    <title>Quản lý lịch khởi hành</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <style>
@@ -60,21 +60,23 @@
             <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=tour_categories"><i class="fas fa-map"></i> Danh mục tour</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
-            <a class="nav-link active" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch Tour</a>
+            <a class="nav-link active" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
-             <a class="nav-link active" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
         </nav>
     </div>
 
     <main class="main">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
-                <h3>Quản lý lịch tour</h3>
+                <h3>Quản lý lịch khởi hành</h3>
                 <p class="text-muted mb-0">Tạo lịch khởi hành, gán HDV và sức chứa</p>
             </div>
-            <a class="btn btn-success" href="<?= BASE_URL ?>?r=schedules_create"><i class="fas fa-plus"></i> Thêm
-                lịch</a>
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>?r=schedules_calendar"><i class="fas fa-calendar"></i> Xem calendar</a>
+                <a class="btn btn-success" href="<?= BASE_URL ?>?r=schedules_create"><i class="fas fa-plus"></i> Thêm lịch</a>
+            </div>
         </div>
 
         <div class="card">

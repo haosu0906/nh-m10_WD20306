@@ -79,6 +79,7 @@
                 <td><?= number_format((float)$adult, 0, ',', '.') ?> VND</td>
                 <td>
                   <a class="btn btn-sm btn-outline-secondary" href="<?= BASE_URL ?>?r=tours_itinerary&id=<?= $tour['id'] ?>">Lịch trình</a>
+                  <a class="btn btn-sm btn-outline-primary" href="<?= BASE_URL ?>?r=schedules&tour_id=<?= $tour['id'] ?>">Lịch khởi hành</a>
                   <a class="btn btn-sm btn-primary" href="<?= BASE_URL ?>?r=tours_edit&id=<?= $tour['id'] ?>">Sửa</a>
                   <a class="btn btn-sm btn-danger" href="<?= BASE_URL ?>?r=tours_delete&id=<?= $tour['id'] ?>" onclick="return confirm('Xác nhận xóa tour này?')">Xóa</a>
                 </td>
