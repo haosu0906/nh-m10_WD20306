@@ -7,6 +7,37 @@ require_once __DIR__ . '/../../models/ScheduleModel.php';
 function booking_index() {
     $status = $_GET['status'] ?? "";
     $items = booking_all($status);
+
+    // Chuẩn bị map tên khách hàng, tên tour và HDV để hiển thị đẹp hơn
+    $pdo = DB::get();
+
+    // Map khách hàng theo id
+    $stmt = $pdo->query("SELECT id, full_name FROM users");
+    $userRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $customersById = [];
+    foreach ($userRows as $u) {
+        $customersById[(int)$u['id']] = $u['full_name'] ?: ('User #' . $u['id']);
+    }
+
+    // Map tour theo id
+    $stmt = $pdo->query("SELECT id, title FROM tours");
+    $tourRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $toursById = [];
+    foreach ($tourRows as $t) {
+        $toursById[(int)$t['id']] = $t['title'] ?: ('Tour #' . $t['id']);
+    }
+
+    // Map HDV chính theo tour (lấy theo lịch khởi hành đầu tiên tìm được)
+    $stmt = $pdo->query("SELECT ts.tour_id, u.full_name AS guide_name FROM tour_schedules ts LEFT JOIN users u ON u.id = ts.guide_user_id WHERE ts.guide_user_id IS NOT NULL ORDER BY ts.start_date ASC");
+    $guideRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $guidesByTour = [];
+    foreach ($guideRows as $g) {
+        $tid = (int)$g['tour_id'];
+        if (!isset($guidesByTour[$tid])) {
+            $guidesByTour[$tid] = $g['guide_name'] ?: '';
+        }
+    }
+
     require __DIR__ . '/../../views/booking/list_booking.php';
 }
 

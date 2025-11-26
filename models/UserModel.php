@@ -39,6 +39,13 @@ class UserModel extends BaseModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function findByEmail($email) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE email = ? LIMIT 1";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute([trim($email)]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     public function create($data) {
         $query = "INSERT INTO users (full_name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)";
         $stmt = $this->pdo->prepare($query);

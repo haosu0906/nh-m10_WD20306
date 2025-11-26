@@ -147,6 +147,26 @@ class GuideModel extends BaseModel
 
     public function delete($id)
     {
+        $id = (int)$id;
+
+        // Ưu tiên xóa trên schema mới guides_info nếu tồn tại
+        try {
+            $stmt = $this->pdo->prepare("SHOW TABLES LIKE ?");
+            $stmt->execute([$this->info_table]);
+            if ($stmt->rowCount() > 0) {
+                // guides_info không có avatar nên chỉ cần xóa bản ghi theo id
+                $del = $this->pdo->prepare("DELETE FROM {$this->info_table} WHERE id = ?");
+                $del->execute([$id]);
+                return;
+            }
+        } catch (PDOException $e) {
+            // Nếu lỗi khác thiếu bảng thì ném ra để dễ debug
+            if (strpos($e->getMessage(), "doesn't exist") === false) {
+                throw $e;
+            }
+        }
+
+        // Fallback: schema cũ guides có cột avatar
         $guide = $this->find($id);
         if ($guide && !empty($guide['avatar'])) {
             $filePath = PATH_ASSETS_UPLOADS . $guide['avatar'];
@@ -155,7 +175,7 @@ class GuideModel extends BaseModel
             }
         }
         $stmt = $this->pdo->prepare("DELETE FROM {$this->table_name} WHERE id = ?");
-        $stmt->execute([(int)$id]);
+        $stmt->execute([$id]);
     }
 }
 

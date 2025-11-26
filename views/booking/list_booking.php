@@ -66,12 +66,15 @@
     <div class="sidebar">
         <h3><i class="fas fa-map-marked-alt"></i> Quản trị Tripmate</h3>
         <nav class="nav flex-column">
-            <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=tour_categories"><i class="fas fa-map"></i> Danh mục tour</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=suppliers"><i class="fas fa-handshake"></i> Nhà cung cấp</a>
             <a class="nav-link active" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân sự</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_dashboard"><i class="fas fa-door-open"></i> Portal HDV</a>
         </nav>
     </div>
 
@@ -111,8 +114,9 @@
                     <thead class="table-light">
                         <tr>
                             <th>ID</th>
-                            <th>Customer ID</th>
-                            <th>Tour ID</th>
+                            <th>Khách hàng</th>
+                            <th>Tour</th>
+                            <th>HDV</th>
                             <th>Ngày đặt</th>
                             <th>Trạng thái</th>
                             <th>Hành động</th>
@@ -122,8 +126,25 @@
                         <?php if(!empty($items)): foreach($items as $b): ?>
                         <tr>
                             <td><?= htmlspecialchars($b['id']) ?></td>
-                            <td><?= htmlspecialchars($b['customer_user_id']) ?></td>
-                            <td><?= htmlspecialchars($b['tour_id']) ?></td>
+                            <td>
+                                <?php
+                                    $cid = (int)($b['customer_user_id'] ?? 0);
+                                    echo htmlspecialchars($customersById[$cid] ?? ('User #' . $cid));
+                                ?>
+                            </td>
+                            <td>
+                                <?php
+                                    $tid = (int)($b['tour_id'] ?? 0);
+                                    echo htmlspecialchars($toursById[$tid] ?? ('Tour #' . $tid));
+                                ?>
+                            </td>
+                            <td>
+                                <?php
+                                    $tid = (int)($b['tour_id'] ?? 0);
+                                    $guideName = $guidesByTour[$tid] ?? '';
+                                    echo $guideName !== '' ? htmlspecialchars($guideName) : '<span class="text-muted">Chưa gán</span>';
+                                ?>
+                            </td>
                             <td><?= !empty($b['date_booked']) ? date('d/m/Y', strtotime($b['date_booked'])) : '---' ?>
                             </td>
                             <td>

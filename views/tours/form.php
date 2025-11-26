@@ -20,11 +20,22 @@ $selectedType = $old['tour_type'] ?? ($tour['tour_type'] ?? 'domestic');
 $selectedStatus = $old['status'] ?? ($tour['status'] ?? 'upcoming');
 $selectedSupplier = $old['supplier_id'] ?? ($tour['supplier_id'] ?? '');
 
-// Itinerary old values
+// Lịch trình tổng quan (mức ngày) – giữ để dùng cho mô tả ngắn
 $itineraryDays = $old['itinerary_day'] ?? array_column($itineraries, 'day_number');
 $itineraryLocations = $old['itinerary_location'] ?? array_column($itineraries, 'location');
 $itineraryActivities = $old['itinerary_activity'] ?? array_column($itineraries, 'activities');
 $itineraryRows = max(1, count($itineraryDays));
+
+// Lịch trình chi tiết theo khung giờ cho form tour
+// Ưu tiên dữ liệu old khi submit lỗi, nếu không dùng từ $itineraryItems được controller truyền xuống
+$detailDays   = $old['it_item_day'] ?? array_column($itineraryItems ?? [], 'day_number');
+$detailStarts = $old['it_item_start'] ?? array_map(fn($r) => substr($r['activity_time'], 0, 5), $itineraryItems ?? []);
+$detailEnds   = $old['it_item_end'] ?? array_map(fn($r) => !empty($r['end_time']) ? substr($r['end_time'], 0, 5) : '', $itineraryItems ?? []);
+$detailSlots  = $old['it_item_slot'] ?? array_column($itineraryItems ?? [], 'slot');
+$detailTitles = $old['it_item_title'] ?? array_column($itineraryItems ?? [], 'title');
+$detailNotes  = $old['it_item_details'] ?? array_column($itineraryItems ?? [], 'details');
+$detailMeals  = $old['it_item_meal'] ?? array_column($itineraryItems ?? [], 'meal_plan');
+$detailRows   = max(1, count($detailDays));
 
 $adultPrice = $old['adult_price'] ?? ($price['adult_price'] ?? 0);
 $childPrice = $old['child_price'] ?? ($price['child_price'] ?? 0);
@@ -60,9 +71,12 @@ $infantPrice = $old['infant_price'] ?? ($price['infant_price'] ?? 0);
       <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
       <a class="nav-link" href="<?= BASE_URL ?>?r=tour_categories"><i class="fas fa-map"></i> Danh mục tour</a>
       <a class="nav-link active" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=suppliers"><i class="fas fa-handshake"></i> Nhà cung cấp</a>
       <a class="nav-link" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
       <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
       <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
+      <a class="nav-link" href="<?= BASE_URL ?>?r=guide_dashboard"><i class="fas fa-door-open"></i> Portal HDV</a>
     </nav>
   </div>
 
@@ -160,27 +174,51 @@ $infantPrice = $old['infant_price'] ?? ($price['infant_price'] ?? 0);
       <div class="card mb-4 section-collapsible collapsed" id="sec-itinerary">
         <div class="card-header fw-semibold" onclick="toggleSec('sec-itinerary')">2. Lịch trình tour <span class="chev">▾</span></div>
         <div class="card-body section-body">
+          <p class="text-muted">Nhập lịch trình chi tiết theo từng ngày, từng khung giờ. Thông tin này sẽ dùng cho cả trang Lịch trình và Portal HDV.</p>
+
           <div id="itinerary-wrapper">
-            <?php for ($i = 0; $i < $itineraryRows; $i++): ?>
+            <?php for ($i = 0; $i < $detailRows; $i++): ?>
               <div class="itinerary-row">
                 <div class="row g-3 align-items-end">
-                  <div class="col-md-2">
+                  <div class="col-md-1">
                     <label class="form-label">Ngày</label>
-                    <input type="number" class="form-control" name="itinerary_day[]" value="<?= htmlspecialchars($itineraryDays[$i] ?? ($i+1)) ?>">
+                    <input type="number" min="1" class="form-control" name="it_item_day[]" value="<?= htmlspecialchars($detailDays[$i] ?? ($i+1)) ?>">
                   </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Điểm tham quan</label>
-                    <input type="text" class="form-control" name="itinerary_location[]" value="<?= htmlspecialchars($itineraryLocations[$i] ?? '') ?>">
+                  <div class="col-md-2">
+                    <label class="form-label">Bắt đầu</label>
+                    <input type="time" class="form-control" name="it_item_start[]" value="<?= htmlspecialchars($detailStarts[$i] ?? '08:00') ?>">
                   </div>
-                  <div class="col-md-6">
-                    <label class="form-label">Hoạt động</label>
-                    <textarea class="form-control" rows="2" name="itinerary_activity[]"><?= htmlspecialchars($itineraryActivities[$i] ?? '') ?></textarea>
+                  <div class="col-md-2">
+                    <label class="form-label">Kết thúc</label>
+                    <input type="time" class="form-control" name="it_item_end[]" value="<?= htmlspecialchars($detailEnds[$i] ?? '') ?>">
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label">Buổi</label>
+                    <?php $slotsMap = ['morning'=>'Sáng','noon'=>'Trưa','afternoon'=>'Chiều','evening'=>'Tối']; $curSlot = $detailSlots[$i] ?? ''; ?>
+                    <select name="it_item_slot[]" class="form-select">
+                      <option value="">-- Chọn buổi --</option>
+                      <?php foreach($slotsMap as $k=>$v): ?>
+                        <option value="<?= $k ?>" <?= $curSlot===$k?'selected':'' ?>><?= $v ?></option>
+                      <?php endforeach; ?>
+                    </select>
+                  </div>
+                  <div class="col-md-5">
+                    <label class="form-label">Tiêu đề</label>
+                    <input type="text" class="form-control" name="it_item_title[]" value="<?= htmlspecialchars($detailTitles[$i] ?? '') ?>" placeholder="VD: Tham quan điểm A, di chuyển đến B">
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">Chi tiết</label>
+                    <textarea class="form-control" rows="2" name="it_item_details[]" placeholder="Mô tả hoạt động, thời lượng, ghi chú..."><?= htmlspecialchars($detailNotes[$i] ?? '') ?></textarea>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Bữa ăn</label>
+                    <input type="text" class="form-control" name="it_item_meal[]" value="<?= htmlspecialchars($detailMeals[$i] ?? '') ?>" placeholder="Sáng/Trưa/Tối">
                   </div>
                 </div>
               </div>
             <?php endfor; ?>
           </div>
-          <button type="button" class="btn btn-outline-primary btn-sm" id="add-itinerary"><i class="fas fa-plus"></i> Thêm dòng</button>
+          <button type="button" class="btn btn-outline-primary btn-sm" id="add-itinerary"><i class="fas fa-plus"></i> Thêm hoạt động</button>
         </div>
       </div>
 

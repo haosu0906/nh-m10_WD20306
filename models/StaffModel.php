@@ -16,11 +16,15 @@ class StaffModel extends BaseModel {
     }
 
     public function create($data){
-        $stmt = $this->pdo->prepare("INSERT INTO users (full_name, email, phone, role, is_active) VALUES (?, ?, ?, ?, ?)");
+        // Mặc định tạo mật khẩu "123456" đã được hash để phù hợp schema users
+        $defaultPassword = password_hash('123456', PASSWORD_DEFAULT);
+
+        $stmt = $this->pdo->prepare("INSERT INTO users (full_name, email, phone, password, role, is_active) VALUES (?, ?, ?, ?, ?, ?)");
         return $stmt->execute([
             trim($data['full_name'] ?? ''),
             $data['email'] ?? '',
             $data['phone'] ?? '',
+            $defaultPassword,
             $data['role'] ?? '',
             isset($data['is_active']) ? (int)$data['is_active'] : 1
         ]);

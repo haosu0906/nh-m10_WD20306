@@ -67,9 +67,12 @@
             <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=tour_categories"><i class="fas fa-map"></i> Danh mục tour</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=suppliers"><i class="fas fa-handshake"></i> Nhà cung cấp</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
             <a class="nav-link active" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_dashboard"><i class="fas fa-door-open"></i> Portal HDV</a>
         </nav>
     </div>
 
@@ -79,7 +82,10 @@
                 <h3>Danh sách hướng dẫn viên</h3>
                 <p class="text-muted mb-0">Quản lý hồ sơ, phân loại và lọc theo tiêu chí</p>
             </div>
-            <a class="btn btn-success" href="<?= BASE_URL ?>?r=guides_create"><i class="fas fa-plus"></i> Thêm HDV</a>
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>?r=guide_dashboard">Portal HDV</a>
+                <a class="btn btn-success" href="<?= BASE_URL ?>?r=guides_create"><i class="fas fa-plus"></i> Thêm HDV</a>
+            </div>
         </div>
 
         <form class="card mb-3" method="get">

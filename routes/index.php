@@ -6,6 +6,9 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 require_once __DIR__ . '/../controllers/TourCategoryController.php';
 require_once __DIR__ . '/../controllers/TourController.php';
 require_once __DIR__ . '/../controllers/GuidesController.php';
+require_once __DIR__ . '/../controllers/AuthController.php';
+require_once __DIR__ . '/../controllers/SupplierController.php';
+
 require_once __DIR__ . '/../controllers/StaffController.php';
 require_once __DIR__ . '/../controllers/ScheduleController.php';
 require_once __DIR__ . '/../controllers/admin/booking.php';
@@ -13,8 +16,12 @@ require_once __DIR__ . '/../controllers/admin/booking.php';
 $catController = new TourCategoryController();
 $tourController = new TourController();
 $guideController = new GuidesController();
+$authController = new AuthController();
+$supplierController = new SupplierController();
+
 $staffController = new StaffController();
 $scheduleController = new ScheduleController();
+
 
 switch ($route) {
     case 'tour_categories':
@@ -69,6 +76,11 @@ switch ($route) {
         }
         break;
 
+    case 'suppliers':
+        $supplierController->index(); break;
+    case 'suppliers_show':
+        $supplierController->show($_GET['id'] ?? 0); break;
+
     case 'guides':
         $guideController->index(); break;
     case 'guides_create':
@@ -81,6 +93,25 @@ switch ($route) {
         $guideController->update($_GET['id'] ?? 0); break;
     case 'guides_delete':
         $guideController->delete($_GET['id'] ?? 0); break;
+
+    // Auth HDV
+    case 'guide_login':
+        $authController->showGuideLogin(); break;
+    case 'guide_login_post':
+        if ($method === 'POST') { $authController->handleGuideLogin(); }
+        break;
+    case 'guide_logout':
+        $authController->guideLogout(); break;
+    case 'guide_dashboard':
+        // Chỉ cho phép nếu là HDV đã đăng nhập
+        if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'guide') {
+            header('Location: ' . BASE_URL . '?r=guide_login');
+            exit;
+        }
+        $scheduleModel = new ScheduleModel();
+        $schedules = $scheduleModel->getByGuide($_SESSION['user_id']);
+        require __DIR__ . '/../views/guides/dashboard.php';
+        break;
 
     case 'staff':
         $staffController->index(); break;

@@ -87,6 +87,18 @@ class ScheduleModel extends BaseModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Lấy lịch trình theo HDV
+    public function getByGuide($guideUserId) {
+        $query = "SELECT ts.*, t.title AS tour_title
+                  FROM tour_schedules ts
+                  LEFT JOIN tours t ON ts.tour_id = t.id
+                  WHERE ts.guide_user_id = ?
+                  ORDER BY ts.start_date ASC";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute([(int)$guideUserId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // Kiểm tra HDV có trùng lịch trong khoảng ngày hay không
     public function guideHasConflict($guideUserId, $startDate, $endDate) {
         $sql = "SELECT COUNT(*) FROM tour_schedules 

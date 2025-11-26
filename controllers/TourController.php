@@ -167,6 +167,7 @@ class TourController
         $categories = $this->categoryModel->all();
         $suppliers = $this->supplierModel->all();
         $itineraries = [];
+        $itineraryItems = [];
         $price = ['adult_price' => 0, 'child_price' => 0, 'infant_price' => 0];
         $gallery = [];
         $types = $this->types;
@@ -201,16 +202,27 @@ class TourController
 
         $tourId = $this->tourModel->create($payload);
 
+        // Lưu quan hệ: lịch trình tổng quan, giá và lịch trình chi tiết theo giờ (nếu có)
         $this->storeRelations($tourId);
 
-        // Auto-plan: nếu người dùng không nhập lịch trình, hệ thống sẽ tạo mặc định
+        // Auto-plan: nếu người dùng không nhập bất kỳ lịch trình nào (tổng quan & chi tiết), hệ thống sẽ tạo mặc định
         $itineraryDays = $_POST['itinerary_day'] ?? [];
         $itineraryLocations = $_POST['itinerary_location'] ?? [];
         $itineraryActivities = $_POST['itinerary_activity'] ?? [];
+        $detailDays = $_POST['it_item_day'] ?? [];
+        $detailStarts = $_POST['it_item_start'] ?? [];
+        $detailTitles = $_POST['it_item_title'] ?? [];
+
         $hasAnyItinerary = false;
         foreach ($itineraryDays as $i => $d) {
-            if ($d !== '' || !empty($itineraryLocations[$i]) || !empty($itineraryActivities[$i])) { $hasAnyItinerary = true; break; }
+            if ($d !== '' || !empty($itineraryLocations[$i] ?? null) || !empty($itineraryActivities[$i] ?? null)) { $hasAnyItinerary = true; break; }
         }
+        if (!$hasAnyItinerary) {
+            foreach ($detailDays as $i => $d) {
+                if ($d !== '' || !empty($detailStarts[$i] ?? null) || !empty($detailTitles[$i] ?? null)) { $hasAnyItinerary = true; break; }
+            }
+        }
+
         if (!$hasAnyItinerary) {
             // 1) Thêm 1 dòng lịch trình mặc định (tổng quan)
             $this->itineraryModel->replace($tourId, [[
@@ -273,6 +285,7 @@ class TourController
         $categories = $this->categoryModel->all();
         $suppliers = $this->supplierModel->all();
         $itineraries = $this->itineraryModel->getByTour($id);
+        $itineraryItems = $this->itineraryItemModel->getByTour($id);
         $price = $this->priceModel->getByTour($id) ?? ['adult_price' => 0, 'child_price' => 0, 'infant_price' => 0];
         $gallery = $this->imageModel->getByTour($id);
         $types = $this->types;
@@ -329,6 +342,13 @@ class TourController
 
     public function delete($id)
     {
+        // Chỉ admin mới được phép xóa tour
+        $role = $_SESSION['role'] ?? null;
+        if ($role !== 'admin') {
+            header('Location: ' . BASE_URL . '?r=tours');
+            exit;
+        }
+
         $tour = $this->tourModel->find($id);
         if ($tour && !empty($tour['cover_image'])) {
             $path = PATH_ASSETS_UPLOADS . $tour['cover_image'];
@@ -381,6 +401,47 @@ class TourController
             ];
         }
         $this->itineraryModel->replace($tourId, $itineraryPayload);
+
+        // Lưu lịch trình chi tiết theo khung giờ nếu được nhập từ form tour
+        $detailDays   = $_POST['it_item_day'] ?? [];
+        $detailStarts = $_POST['it_item_start'] ?? [];
+        $detailEnds   = $_POST['it_item_end'] ?? [];
+        $detailSlots  = $_POST['it_item_slot'] ?? [];
+        $detailTitles = $_POST['it_item_title'] ?? [];
+        $detailNotes  = $_POST['it_item_details'] ?? [];
+        $detailMeals  = $_POST['it_item_meal'] ?? [];
+
+        $detailItems = [];
+        foreach ($detailDays as $i => $day) {
+            $day = trim((string)$day);
+            $start = trim($detailStarts[$i] ?? '');
+            $title = trim($detailTitles[$i] ?? '');
+            $details = trim($detailNotes[$i] ?? '');
+
+            if ($day === '' && $start === '' && $title === '' && $details === '') {
+                continue;
+            }
+
+            $detailItems[] = [
+                'day_number'    => (int)($day !== '' ? $day : 1),
+                'activity_time' => $start !== '' ? $start . ':00' : '08:00:00',
+                'end_time'      => ($detailEnds[$i] ?? '') !== '' ? ($detailEnds[$i] . ':00') : null,
+                'slot'          => trim($detailSlots[$i] ?? ''),
+                'title'         => $title,
+                'details'       => $details,
+                'meal_plan'     => trim($detailMeals[$i] ?? ''),
+            ];
+        }
+
+        try {
+            // Xóa chi tiết cũ rồi ghi lại danh sách mới nếu có
+            $this->itineraryItemModel->deleteByTour($tourId);
+            if (!empty($detailItems)) {
+                $this->itineraryItemModel->addBulk($tourId, $detailItems);
+            }
+        } catch (Exception $e) {
+            // Không để lỗi lịch trình chi tiết chặn việc lưu tour
+        }
 
         $prices = [
             'adult_price' => (float)($_POST['adult_price'] ?? 0),
