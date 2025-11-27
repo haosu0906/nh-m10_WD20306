@@ -14,6 +14,20 @@ class ScheduleController {
         $this->userModel = new UserModel();
     }
 
+    // Dashboard dành cho HDV
+    public function dashboard() {
+        // Xóa session_start() vì đã gọi ở index.php
+        if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'guide') {
+            header('Location: ' . BASE_URL . '?r=guide_login');
+            exit;
+        }
+
+        $userId = $_SESSION['user_id'];
+        $schedules = $this->scheduleModel->getByGuide($userId);
+
+        require __DIR__ . '/../views/guides/dashboard.php';
+    }
+
     public function index(){
         $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
         if ($tourId > 0) {
@@ -24,7 +38,6 @@ class ScheduleController {
         require __DIR__ . '/../views/schedules/index.php';
     }
 
-    // Lịch khởi hành dạng calendar
     public function calendar(){
         $schedules = $this->scheduleModel->all();
         require __DIR__ . '/../views/schedules/calendar.php';

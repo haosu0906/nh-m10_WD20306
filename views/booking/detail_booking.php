@@ -70,7 +70,10 @@
             <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân sự</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_dashboard"><i class="fas fa-door-open"></i> Portal HDV</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_login">
+                <i class="fas fa-door-open"></i> Portal HDV
+            </a>
+
         </nav>
     </div>
 
@@ -99,14 +102,16 @@
                 <div class="col-md-6">
                     <p><b>Mã booking:</b> <?= htmlspecialchars(booking_code_from_id($item['id'])) ?></p>
                     <p><b>Tour:</b> <?= htmlspecialchars($tour['title'] ?? ('#' . $item['tour_id'])) ?></p>
-                    <p><b>Ngày đặt:</b> <?= !empty($item['date_booked']) ? date('d/m/Y H:i', strtotime($item['date_booked'])) : '---' ?></p>
+                    <p><b>Ngày đặt:</b>
+                        <?= !empty($item['date_booked']) ? date('d/m/Y H:i', strtotime($item['date_booked'])) : '---' ?>
+                    </p>
                     <p><b>Tổng khách:</b> <?= (int)$item['total_guests'] ?></p>
                 </div>
                 <div class="col-md-6">
                     <p><b>Khách hàng:</b>
                         <?= htmlspecialchars($customer['full_name'] ?? ('ID: ' . ($item['customer_user_id'] ?? '---'))) ?>
                         <?php if (!empty($customer['email'])): ?>
-                            (<?= htmlspecialchars($customer['email']) ?>)
+                        (<?= htmlspecialchars($customer['email']) ?>)
                         <?php endif; ?>
                     </p>
                     <p><b>Nhân viên sales:</b>
@@ -130,7 +135,8 @@
                     <label>Trạng thái mới</label>
                     <select class="form-select" name="status" required>
                         <?php foreach ($statusLabels as $key => $label): ?>
-                        <option value="<?= $key ?>" <?= ($item['booking_status']==$key)?'selected':'' ?>><?= $label ?></option>
+                        <option value="<?= $key ?>" <?= ($item['booking_status']==$key)?'selected':'' ?>><?= $label ?>
+                        </option>
                         <?php endforeach; ?>
                     </select>
 
@@ -147,30 +153,30 @@
             <div class="card-body">
                 <h4>Danh sách khách</h4>
                 <?php if (!empty($guests)): ?>
-                    <table class="table table-bordered table-sm">
-                        <thead>
-                            <tr>
-                                <th>Họ tên</th>
-                                <th>Giới tính</th>
-                                <th>Ngày sinh</th>
-                                <th>CMND/CCCD</th>
-                                <th>Ghi chú</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th>Họ tên</th>
+                            <th>Giới tính</th>
+                            <th>Ngày sinh</th>
+                            <th>CMND/CCCD</th>
+                            <th>Ghi chú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                         <?php foreach ($guests as $g): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($g['full_name']) ?></td>
-                                <td><?= htmlspecialchars($g['gender']) ?></td>
-                                <td><?= !empty($g['dob']) ? date('d/m/Y', strtotime($g['dob'])) : '---' ?></td>
-                                <td><?= htmlspecialchars($g['id_document_no']) ?></td>
-                                <td><?= htmlspecialchars($g['notes']) ?></td>
-                            </tr>
+                        <tr>
+                            <td><?= htmlspecialchars($g['full_name']) ?></td>
+                            <td><?= htmlspecialchars($g['gender']) ?></td>
+                            <td><?= !empty($g['dob']) ? date('d/m/Y', strtotime($g['dob'])) : '---' ?></td>
+                            <td><?= htmlspecialchars($g['id_document_no']) ?></td>
+                            <td><?= htmlspecialchars($g['notes']) ?></td>
+                        </tr>
                         <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                    </tbody>
+                </table>
                 <?php else: ?>
-                    <p class="text-muted">Chưa có thông tin khách.</p>
+                <p class="text-muted">Chưa có thông tin khách.</p>
                 <?php endif; ?>
             </div>
         </div>

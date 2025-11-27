@@ -74,7 +74,10 @@
             <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân sự</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_dashboard"><i class="fas fa-door-open"></i> Portal HDV</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_login">
+                <i class="fas fa-door-open"></i> Portal HDV
+            </a>
+
         </nav>
     </div>
 

@@ -1,6 +1,5 @@
 <?php
-
-require_once __DIR__ . '/env.php';
+require_once __DIR__ . '/../configs/env.php';
 
 class DB {
     private static $pdo = null;

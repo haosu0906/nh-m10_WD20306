@@ -63,9 +63,13 @@
             <a class="nav-link" href="<?= BASE_URL ?>?r=suppliers"><i class="fas fa-handshake"></i> Nhà cung cấp</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
-            <a class="nav-link active" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
+            <a class="nav-link active" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi
+                hành</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_dashboard"><i class="fas fa-door-open"></i> Portal HDV</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_login">
+                <i class="fas fa-door-open"></i> Portal HDV
+            </a>
+
         </nav>
     </div>
 
@@ -76,8 +80,10 @@
                 <p class="text-muted mb-0">Tạo lịch khởi hành, gán HDV và sức chứa</p>
             </div>
             <div class="d-flex gap-2">
-                <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>?r=schedules_calendar"><i class="fas fa-calendar"></i> Xem calendar</a>
-                <a class="btn btn-success" href="<?= BASE_URL ?>?r=schedules_create"><i class="fas fa-plus"></i> Thêm lịch</a>
+                <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>?r=schedules_calendar"><i
+                        class="fas fa-calendar"></i> Xem calendar</a>
+                <a class="btn btn-success" href="<?= BASE_URL ?>?r=schedules_create"><i class="fas fa-plus"></i> Thêm
+                    lịch</a>
             </div>
         </div>
 

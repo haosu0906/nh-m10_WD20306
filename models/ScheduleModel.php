@@ -130,5 +130,19 @@ class ScheduleModel extends BaseModel {
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ? (int)$row['id'] : null;
     }
+
+    // Hàm lấy lịch tour của HDV và load view dashboard
+    public function mySchedules() {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: ' . BASE_URL . '?r=guide_login');
+            exit;
+        }
+
+        $userId = $_SESSION['user_id'];
+        $schedules = $this->getByGuide($userId); // sửa đúng
+
+        // load view dashboard HDV
+        require __DIR__ . '/../views/guides/dashboard.php';
+    }
 }
 ?>

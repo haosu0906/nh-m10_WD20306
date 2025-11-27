@@ -72,7 +72,10 @@
             <a class="nav-link active" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_dashboard"><i class="fas fa-door-open"></i> Portal HDV</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_login">
+                <i class="fas fa-door-open"></i> Portal HDV
+            </a>
+
         </nav>
     </div>
 
@@ -84,7 +87,8 @@
             </div>
             <div class="d-flex gap-2">
                 <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>?r=guide_dashboard">Portal HDV</a>
-                <a class="btn btn-success" href="<?= BASE_URL ?>?r=guides_create"><i class="fas fa-plus"></i> Thêm HDV</a>
+                <a class="btn btn-success" href="<?= BASE_URL ?>?r=guides_create"><i class="fas fa-plus"></i> Thêm
+                    HDV</a>
             </div>
         </div>
 
@@ -140,7 +144,9 @@
                                     </div>
                                     <?php endif; ?>
                                     <div>
-                                        <div class="fw-semibold"><?= htmlspecialchars((string)$guide['full_name'], ENT_QUOTES, 'UTF-8') ?></div>
+                                        <div class="fw-semibold">
+                                            <?= htmlspecialchars((string)$guide['full_name'], ENT_QUOTES, 'UTF-8') ?>
+                                        </div>
                                         <?php
                         $createdDisplay = !empty($guide['created_at']) ? date('d/m/Y', strtotime($guide['created_at'])) : '---';
                       ?>
@@ -149,17 +155,24 @@
                                 </div>
                             </td>
                             <td>
-                                <div>Email: <?= htmlspecialchars((string)($guide['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
-                                <div>ĐT: <?= htmlspecialchars((string)($guide['phone'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
+                                <div>Email:
+                                    <?= htmlspecialchars((string)($guide['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
+                                <div>ĐT: <?= htmlspecialchars((string)($guide['phone'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
+                                </div>
                             </td>
                             <td>
-                                <div>CMND: <?= htmlspecialchars((string)($guide['identity_no'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
-                                <div>Chứng chỉ: <?= htmlspecialchars((string)($guide['certificate_no'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
+                                <div>CMND:
+                                    <?= htmlspecialchars((string)($guide['identity_no'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
+                                </div>
+                                <div>Chứng chỉ:
+                                    <?= htmlspecialchars((string)($guide['certificate_no'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
+                                </div>
                             </td>
                             <td><span
                                     class="badge bg-primary"><?= htmlspecialchars((string)($types[$guide['guide_type']] ?? $guide['guide_type']), ENT_QUOTES, 'UTF-8') ?></span>
                             </td>
-                            <td><?= htmlspecialchars((string)mb_substr((string)($guide['notes'] ?? ''), 0, 40), ENT_QUOTES, 'UTF-8') ?></td>
+                            <td><?= htmlspecialchars((string)mb_substr((string)($guide['notes'] ?? ''), 0, 40), ENT_QUOTES, 'UTF-8') ?>
+                            </td>
                             <td>
                                 <a class="btn btn-sm btn-primary"
                                     href="<?= BASE_URL ?>?r=guides_edit&id=<?= $guide['id'] ?>">Sửa</a>

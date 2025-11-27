@@ -1,11 +1,12 @@
 <?php
-// D:\laragon\www\base\models\UserModel.php
+require_once __DIR__ . '/../assets/configs/db.php';
 
-class UserModel extends BaseModel {
+class UserModel {
     protected $table_name = "users";
+    private $pdo;
 
     public function __construct() {
-        parent::__construct();
+        $this->pdo = DB::get();
     }
 
     public function getGuides() {
@@ -53,7 +54,7 @@ class UserModel extends BaseModel {
             $data['full_name'] ?? '',
             $data['email'] ?? '',
             $data['phone'] ?? '',
-            password_hash($data['password'] ?? '123456', PASSWORD_DEFAULT), // Mật khẩu mặc định
+            password_hash($data['password'] ?? '123456', PASSWORD_DEFAULT),
             $data['role'] ?? 'staff'
         ]);
     }
@@ -76,4 +77,3 @@ class UserModel extends BaseModel {
         return $stmt->execute([(int)$id]);
     }
 }
-?>

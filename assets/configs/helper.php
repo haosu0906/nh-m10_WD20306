@@ -1,5 +1,4 @@
 <?php
-
 if (!function_exists('debug')) {
     function debug($data)
     {
@@ -49,9 +48,7 @@ if (!function_exists('upload_multiple_files')) {
 
         $count = count($files['name']);
         for ($i = 0; $i < $count; $i++) {
-            if (empty($files['name'][$i])) {
-                continue;
-            }
+            if (empty($files['name'][$i])) continue;
             $single = [
                 'name' => $files['name'][$i],
                 'type' => $files['type'][$i] ?? '',
@@ -61,9 +58,7 @@ if (!function_exists('upload_multiple_files')) {
             ];
             if ($single['error'] === UPLOAD_ERR_OK) {
                 $path = upload_file($folder, $single);
-                if ($path) {
-                    $paths[] = $path;
-                }
+                if ($path) $paths[] = $path;
             }
         }
         return $paths;
@@ -81,7 +76,6 @@ if (!function_exists('flash')) {
             }
             return null;
         }
-
         $_SESSION['flash'][$key] = $value;
     }
 }
@@ -89,14 +83,8 @@ if (!function_exists('flash')) {
 if (!function_exists('redirect_with_flash')) {
     function redirect_with_flash($url, $errors = [], $old = [])
     {
-        if (!empty($errors)) {
-            flash('errors', $errors);
-        }
-
-        if (!empty($old)) {
-            flash('old', $old);
-        }
-
+        if (!empty($errors)) flash('errors', $errors);
+        if (!empty($old)) flash('old', $old);
         header('Location: ' . $url);
         exit;
     }

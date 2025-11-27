@@ -8,7 +8,6 @@ require_once __DIR__ . '/../controllers/TourController.php';
 require_once __DIR__ . '/../controllers/GuidesController.php';
 require_once __DIR__ . '/../controllers/AuthController.php';
 require_once __DIR__ . '/../controllers/SupplierController.php';
-
 require_once __DIR__ . '/../controllers/StaffController.php';
 require_once __DIR__ . '/../controllers/ScheduleController.php';
 require_once __DIR__ . '/../controllers/admin/booking.php';
@@ -18,10 +17,8 @@ $tourController = new TourController();
 $guideController = new GuidesController();
 $authController = new AuthController();
 $supplierController = new SupplierController();
-
 $staffController = new StaffController();
 $scheduleController = new ScheduleController();
-
 
 switch ($route) {
     case 'tour_categories':
@@ -38,42 +35,30 @@ switch ($route) {
         $catController->delete($_GET['id'] ?? 0); break;
 
     case 'tours':
-        if ($method === 'GET') {
-            $tourController->index();
-        }
+        if ($method === 'GET') $tourController->index();
         break;
     case 'tours_create':
         $tourController->create(); break;
     case 'tours_store':
-        if ($method === 'POST') {
-            $tourController->store();
-        }
+        if ($method === 'POST') $tourController->store();
         break;
     case 'tours_edit':
         $tourController->edit($_GET['id'] ?? 0); break;
     case 'tours_update':
-        if ($method === 'POST') {
-            $tourController->update($_GET['id'] ?? 0);
-        }
+        if ($method === 'POST') $tourController->update($_GET['id'] ?? 0);
         break;
     case 'tours_delete':
         $tourController->delete($_GET['id'] ?? 0); break;
     case 'tours_itinerary':
         $tourController->itinerary($_GET['id'] ?? 0); break;
     case 'tours_itinerary_add':
-        if ($method === 'POST') {
-            $tourController->itinerary_add_item($_POST);
-        }
+        if ($method === 'POST') $tourController->itinerary_add_item($_POST);
         break;
     case 'tours_itinerary_update':
-        if ($method === 'POST') {
-            $tourController->itinerary_update_item($_POST['id'] ?? 0, $_POST);
-        }
+        if ($method === 'POST') $tourController->itinerary_update_item($_POST['id'] ?? 0, $_POST);
         break;
     case 'tours_itinerary_delete':
-        if ($method === 'POST') {
-            $tourController->itinerary_delete_item($_POST['id'] ?? 0, $_POST['tour_id'] ?? 0);
-        }
+        if ($method === 'POST') $tourController->itinerary_delete_item($_POST['id'] ?? 0, $_POST['tour_id'] ?? 0);
         break;
 
     case 'suppliers':
@@ -94,24 +79,25 @@ switch ($route) {
     case 'guides_delete':
         $guideController->delete($_GET['id'] ?? 0); break;
 
-    // Auth HDV
+    // Auth - Guide
     case 'guide_login':
         $authController->showGuideLogin(); break;
     case 'guide_login_post':
-        if ($method === 'POST') { $authController->handleGuideLogin(); }
-        break;
+        if ($method === 'POST') $authController->handleGuideLogin(); break;
     case 'guide_logout':
         $authController->guideLogout(); break;
-    case 'guide_dashboard':
-        // Chỉ cho phép nếu là HDV đã đăng nhập
-        if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'guide') {
-            header('Location: ' . BASE_URL . '?r=guide_login');
-            exit;
-        }
-        $scheduleModel = new ScheduleModel();
-        $schedules = $scheduleModel->getByGuide($_SESSION['user_id']);
-        require __DIR__ . '/../views/guides/dashboard.php';
+
+         case 'guide_dashboard':
+        $scheduleController->dashboard();
         break;
+
+    // Auth - Admin
+    case 'admin_login':
+        $authController->showAdminLogin(); break;
+    case 'admin_login_post':
+        if ($method === 'POST') $authController->handleAdminLogin(); break;
+    case 'admin_logout':
+        $authController->adminLogout(); break;
 
     case 'staff':
         $staffController->index(); break;
@@ -141,28 +127,19 @@ switch ($route) {
     case 'schedules_delete':
         $scheduleController->delete($_GET['id'] ?? 0); break;
 
-    //Booking
-
+    // Booking
     case "booking":
-        booking_index();
-        break;
+        booking_index(); break;
     case "booking_create":
-        booking_create();
-        break;
+        booking_create(); break;
     case "booking_store":
-        if ($method === 'POST') {
-            booking_store();
-        }
-        break;
+        if ($method === 'POST') booking_store(); break;
     case "booking_detail":
-        booking_detail();
-        break;
+        booking_detail(); break;
     case "booking_update_status":
-        booking_update_status();
-        break;
+        booking_update_status(); break;
 
     case 'home':
     default:
-        require __DIR__ . '/../views/main.php';
-        break;
+        require __DIR__ . '/../views/main.php'; break;
 }

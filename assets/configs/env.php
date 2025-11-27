@@ -1,6 +1,6 @@
 <?php
 
-define('BASE_URL',          'http://localhost/ggg/nh-m10_WD20306/');
+define('BASE_URL',          'http://localhost/nh-m10_WD20306/nh-m10_WD20306/');
 
 // Thư mục gốc của project: nh-m10_WD20306/
 define('PATH_ROOT',         __DIR__ . '/../..' . '/');
