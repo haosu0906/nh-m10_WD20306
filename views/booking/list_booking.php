@@ -62,53 +62,26 @@
 </head>
 
 <body>
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <h3><i class="fas fa-map-marked-alt"></i> Quản trị Tripmate</h3>
-        <nav class="nav flex-column">
-            <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=tour_categories"><i class="fas fa-map"></i> Danh mục tour</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=suppliers"><i class="fas fa-handshake"></i> Nhà cung cấp</a>
-            <a class="nav-link active" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân sự</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_login">
-                <i class="fas fa-door-open"></i> Portal HDV
-            </a>
-
-        </nav>
-    </div>
+    <!-- Sidebar (include standard template) -->
+    <?php
+        $current_page = 'booking';
+        require_once __DIR__ . '/../../assets/templates/sidebar.php';
+    ?>
 
     <!-- Main content -->
     <main class="main">
         <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-4 fade-in">
             <div>
-                <h3>Quản lý Booking</h3>
+                <h1 class="mb-2">📋 Quản lý Booking</h1>
                 <p class="text-muted mb-0">Theo dõi và quản lý tình trạng booking</p>
             </div>
             <div>
-                <a href="<?= BASE_URL ?>?r=booking_create" class="btn btn-primary">
-                    + Tạo booking mới
+                <a href="<?= BASE_URL ?>?r=booking_create" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>Tạo booking mới
                 </a>
             </div>
         </div>
-
-        <!-- Form lọc trạng thái -->
-        <form method="get" class="mb-3">
-            <input type="hidden" name="r" value="booking">
-            <select name="status" class="form-select w-25" onchange="this.form.submit()">
-                <option value="">Tất cả</option>
-                <option value="pending" <?= (($_GET['status'] ?? '') === 'pending') ? 'selected' : '' ?>>Chờ xác nhận
-                </option>
-                <option value="deposit" <?= (($_GET['status'] ?? '') === 'deposit') ? 'selected' : '' ?>>Đã cọc</option>
-                <option value="completed" <?= (($_GET['status'] ?? '') === 'completed') ? 'selected' : '' ?>>Hoàn tất
-                </option>
-                <option value="canceled" <?= (($_GET['status'] ?? '') === 'canceled') ? 'selected' : '' ?>>Hủy</option>
-            </select>
-        </form>
 
         <!-- Table danh sách booking -->
         <div class="card">
@@ -119,8 +92,8 @@
                             <th>ID</th>
                             <th>Khách hàng</th>
                             <th>Tour</th>
-                            <th>HDV</th>
                             <th>Ngày đặt</th>
+                            <th>Số khách</th>
                             <th>Trạng thái</th>
                             <th>Hành động</th>
                         </tr>
@@ -129,27 +102,10 @@
                         <?php if(!empty($items)): foreach($items as $b): ?>
                         <tr>
                             <td><?= htmlspecialchars($b['id']) ?></td>
-                            <td>
-                                <?php
-                                    $cid = (int)($b['customer_user_id'] ?? 0);
-                                    echo htmlspecialchars($customersById[$cid] ?? ('User #' . $cid));
-                                ?>
-                            </td>
-                            <td>
-                                <?php
-                                    $tid = (int)($b['tour_id'] ?? 0);
-                                    echo htmlspecialchars($toursById[$tid] ?? ('Tour #' . $tid));
-                                ?>
-                            </td>
-                            <td>
-                                <?php
-                                    $tid = (int)($b['tour_id'] ?? 0);
-                                    $guideName = $guidesByTour[$tid] ?? '';
-                                    echo $guideName !== '' ? htmlspecialchars($guideName) : '<span class="text-muted">Chưa gán</span>';
-                                ?>
-                            </td>
-                            <td><?= !empty($b['date_booked']) ? date('d/m/Y', strtotime($b['date_booked'])) : '---' ?>
-                            </td>
+                            <td><?= htmlspecialchars($b['customer_name'] ?? 'N/A') ?></td>
+                            <td><?= htmlspecialchars($b['tour_name'] ?? 'N/A') ?></td>
+                            <td><?= !empty($b['date_booked']) ? date('d/m/Y H:i', strtotime($b['date_booked'])) : '---' ?></td>
+                            <td><?= htmlspecialchars($b['total_guests'] ?? '0') ?></td>
                             <td>
                                 <?php
                                     $statusLabels = [
@@ -158,17 +114,18 @@
                                         'completed' => 'Hoàn tất',
                                         'canceled' => 'Hủy'
                                     ];
-                                    echo $statusLabels[$b['booking_status']] ?? $b['booking_status'];
+                                    echo $statusLabels[$b['booking_status'] ?? 'pending'] ?? $b['booking_status'];
                                 ?>
                             </td>
                             <td>
-                                <a class="btn btn-sm btn-primary"
-                                    href="<?= BASE_URL ?>?r=booking_detail&id=<?= $b['id'] ?>">Chi tiết</a>
+                                <a class="btn btn-sm btn-primary" href="<?= BASE_URL ?>?r=booking_detail&id=<?= $b['id'] ?>">
+                                    <i class="fas fa-eye"></i> Chi tiết
+                                </a>
                             </td>
                         </tr>
                         <?php endforeach; else: ?>
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-3">Chưa có dữ liệu</td>
+                            <td colspan="7" class="text-center text-muted py-4">Chưa có booking nào</td>
                         </tr>
                         <?php endif; ?>
                     </tbody>
@@ -176,6 +133,8 @@
             </div>
         </div>
     </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

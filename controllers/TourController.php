@@ -158,6 +158,30 @@ class TourController
         foreach ($tours as $tour) {
             $priceByTour[$tour['id']] = $this->priceModel->getByTour($tour['id']);
         }
+
+        // Lấy chính sách hủy cho mỗi tour
+        $pdo = (new \BaseModel())->getConnection();
+        $stmt = $pdo->query("SELECT t.id AS tour_id, cp.name AS cancellation_policy_name, cp.refund_percentage AS cancellation_policy_refund
+                               FROM tours t
+                               LEFT JOIN cancellation_policies cp ON t.cancellation_policy_id = cp.id
+                               WHERE cp.id IS NOT NULL");
+        $policyMap = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $policyMap[$row['tour_id']] = [
+                'name' => $row['cancellation_policy_name'],
+                'refund' => $row['cancellation_policy_refund']
+            ];
+        }
+        foreach ($tours as &$tour) {
+            if (isset($policyMap[$tour['id']])) {
+                $tour['cancellation_policy_name'] = $policyMap[$tour['id']]['name'];
+                $tour['cancellation_policy_refund'] = $policyMap[$tour['id']]['refund'];
+            } else {
+                $tour['cancellation_policy_name'] = null;
+                $tour['cancellation_policy_refund'] = null;
+            }
+        }
+
         require __DIR__ . '/../views/tours/index.php';
     }
 
@@ -174,6 +198,11 @@ class TourController
         $statuses = $this->statuses;
         $errors = flash('errors') ?? [];
         $old = flash('old') ?? [];
+
+        // Lấy danh sách chính sách hủy
+        $stmt = (new \BaseModel())->getConnection()->query("SELECT id, name, refund_percentage FROM cancellation_policies WHERE is_active = 1 ORDER BY name");
+        $cancellationPolicies = $stmt->fetchAll();
+
         require __DIR__ . '/../views/tours/form.php';
     }
 
@@ -292,6 +321,11 @@ class TourController
         $statuses = $this->statuses;
         $errors = flash('errors') ?? [];
         $old = flash('old') ?? [];
+
+        // Lấy danh sách chính sách hủy
+        $stmt = (new \BaseModel())->getConnection()->query("SELECT id, name, refund_percentage FROM cancellation_policies WHERE is_active = 1 ORDER BY name");
+        $cancellationPolicies = $stmt->fetchAll();
+
         require __DIR__ . '/../views/tours/form.php';
     }
 
@@ -358,16 +392,26 @@ class TourController
         }
         // Xóa chi tiết lịch trình theo giờ (nếu có)
         try { $this->itineraryItemModel->deleteByTour($id); } catch (Exception $e) { /* ignore */ }
-        // Xóa lịch trình tổng quan
-        $this->itineraryModel->replace($id, []);
-        // Xóa lịch khởi hành của tour
-        try { $this->scheduleModel->deleteByTour($id); } catch (Exception $e) { /* ignore */ }
-        // Xóa giá và hình ảnh
-        $this->priceModel->deleteByTour($id);
-        $this->imageModel->deleteByTour($id);
-        $this->tourModel->delete($id);
-        header('Location: ' . BASE_URL . '?r=tours');
-        exit;
+        // Kiểm tra xem có thể xóa tour không
+        $result = $this->tourModel->delete($id);
+        
+        if ($result['success']) {
+            // Nếu xóa thành công, xóa các dữ liệu liên quan
+            $this->itineraryModel->replace($id, []);
+            try { $this->scheduleModel->deleteByTour($id); } catch (Exception $e) { /* ignore */ }
+            $this->priceModel->deleteByTour($id);
+            $this->imageModel->deleteByTour($id);
+            
+            // Set flash message và redirect
+            $_SESSION['flash_success'] = $result['message'];
+            header('Location: ' . BASE_URL . '?r=tours');
+            exit;
+        } else {
+            // Nếu không thể xóa, set flash message và redirect back
+            $_SESSION['flash_error'] = $result['message'];
+            header('Location: ' . $_SERVER['HTTP_REFERER']);
+            exit;
+        }
     }
 
     protected function filterTourData($input)
@@ -379,6 +423,7 @@ class TourController
             'tour_type' => $input['tour_type'] ?? 'domestic',
             'status' => $input['status'] ?? 'upcoming',
             'supplier_id' => !empty($input['supplier_id']) ? (int)$input['supplier_id'] : null,
+            'cancellation_policy_id' => !empty($input['cancellation_policy_id']) ? (int)$input['cancellation_policy_id'] : null,
             'policy' => trim($input['policy'] ?? ''),
         ];
     }

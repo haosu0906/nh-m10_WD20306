@@ -9,7 +9,12 @@
   <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h3 class="mb-0">Lịch tour của tôi</h3>
-      <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>?r=guide_logout">Đăng xuất</a>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" href="<?= BASE_URL ?>?r=tour_logs&guide_id=<?= (int)($_SESSION['guide_user_id'] ?? 0) ?>">
+          Nhật ký tour của tôi
+        </a>
+        <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>?r=guide_logout">Đăng xuất</a>
+      </div>
     </div>
 
     <?php if (empty($schedules)): ?>
@@ -25,6 +30,7 @@
                 <th>Ngày về</th>
                 <th>Ghi chú</th>
                 <th>Xem lịch trình</th>
+                <th>Nhật ký tour</th>
               </tr>
             </thead>
             <tbody>
@@ -36,6 +42,9 @@
                   <td>-</td>
                   <td>
                     <a class="btn btn-sm btn-outline-primary" href="<?= BASE_URL ?>?r=tours_itinerary&id=<?= (int)$row['tour_id'] ?>">Lịch trình tour</a>
+                  </td>
+                  <td>
+                    <a class="btn btn-sm btn-outline-success" href="<?= BASE_URL ?>?r=tour_logs&tour_id=<?= (int)$row['tour_id'] ?>&guide_id=<?= (int)($_SESSION['guide_user_id'] ?? 0) ?>">Nhật ký</a>
                   </td>
                 </tr>
               <?php endforeach; ?>

@@ -238,8 +238,57 @@ class TourModel extends BaseModel {
     }
 
     public function delete($id) {
+        // Kiểm tra xem tour có booking nào không
+        $checkSql = "SELECT COUNT(*) as booking_count FROM bookings WHERE tour_id = ?";
+        $checkStmt = $this->pdo->prepare($checkSql);
+        $checkStmt->execute([(int)$id]);
+        $result = $checkStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result['booking_count'] > 0) {
+            // Có booking liên quan, không cho xóa
+            return [
+                'success' => false,
+                'message' => "Không thể xóa tour này vì có {$result['booking_count']} booking liên quan. Vui lòng xóa các booking trước hoặc hủy chúng."
+            ];
+        }
+        
+        // Chỉ kiểm tra các bảng quan trọng (không cho xóa nếu có dữ liệu)
+        $criticalTables = [
+            'guide_assignments' => 'tour_id'  // Phân công HDV - quan trọng
+        ];
+        
+        foreach ($criticalTables as $table => $field) {
+            try {
+                $checkTableSql = "SHOW TABLES LIKE ?";
+                $checkStmt = $this->pdo->prepare($checkTableSql);
+                $checkStmt->execute([$table]);
+                
+                if ($checkStmt->rowCount() > 0) {
+                    $sql = "SELECT COUNT(*) as count FROM {$table} WHERE {$field} = ?";
+                    $stmt = $this->pdo->prepare($sql);
+                    $stmt->execute([(int)$id]);
+                    $count = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+                    
+                    if ($count > 0) {
+                        return [
+                            'success' => false,
+                            'message' => "Không thể xóa tour này vì có {$count} phân công hướng dẫn viên liên quan. Vui lòng hủy các phân công trước."
+                        ];
+                    }
+                }
+            } catch (PDOException $e) {
+                continue;
+            }
+        }
+        
+        // Nếu không có ràng buộc quan trọng, thực hiện xóa
         $stmt = $this->pdo->prepare("DELETE FROM {$this->table_name} WHERE id = ?");
-        return $stmt->execute([(int)$id]);
+        $result = $stmt->execute([(int)$id]);
+        
+        return [
+            'success' => $result,
+            'message' => $result ? 'Xóa tour thành công!' : 'Xóa tour thất bại!'
+        ];
     }
 }
 ?>

@@ -34,7 +34,7 @@ $detailEnds   = $old['it_item_end'] ?? array_map(fn($r) => !empty($r['end_time']
 $detailSlots  = $old['it_item_slot'] ?? array_column($itineraryItems ?? [], 'slot');
 $detailTitles = $old['it_item_title'] ?? array_column($itineraryItems ?? [], 'title');
 $detailNotes  = $old['it_item_details'] ?? array_column($itineraryItems ?? [], 'details');
-$detailMeals  = $old['it_item_meal'] ?? array_column($itineraryItems ?? [], 'meal_plan');
+$detailLocations = $old['it_item_location'] ?? array_column($itineraryItems ?? [], 'location');
 $detailRows   = max(1, count($detailDays));
 
 $adultPrice = $old['adult_price'] ?? ($price['adult_price'] ?? 0);
@@ -142,13 +142,20 @@ $infantPrice = $old['infant_price'] ?? ($price['infant_price'] ?? 0);
             <a class="nav-link active" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=suppliers"><i class="fas fa-handshake"></i> Nhà cung cấp</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=payments"><i class="fas fa-credit-card"></i> Thanh toán</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=cancellation_policies"><i class="fas fa-ban"></i> Chính sách hủy</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_assignments"><i class="fas fa-user-check"></i> Phân công HDV</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_schedules"><i class="fas fa-calendar-alt"></i> Lịch HDV</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_ratings"><i class="fas fa-star"></i> Đánh giá HDV</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=guide_login">
                 <i class="fas fa-door-open"></i> Portal HDV
             </a>
-
+            <a class="nav-link" href="<?= BASE_URL ?>?r=admin_login">
+                <i class="fas fa-user-shield"></i> Đăng nhập Admin
+            </a>
         </nav>
     </div>
 
@@ -219,6 +226,17 @@ $infantPrice = $old['infant_price'] ?? ($price['infant_price'] ?? 0);
                                     <?= (string)$selectedSupplier === (string)$supplier['id'] ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($supplier['name']) ?></option>
                                 <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Chính sách hủy</label>
+                            <select name="cancellation_policy_id" class="form-select">
+                                <option value="">-- Chọn chính sách --</option>
+                                <?php if (!empty($cancellationPolicies)): foreach ($cancellationPolicies as $cp): ?>
+                                <option value="<?= $cp['id'] ?>" <?= (isset($tour['cancellation_policy_id']) && (int)$tour['cancellation_policy_id'] === (int)$cp['id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($cp['name']) ?> (<?= $cp['refund_percentage'] ?>%)
+                                </option>
+                                <?php endforeach; endif; ?>
                             </select>
                         </div>
                         <div class="col-md-4">
@@ -305,10 +323,10 @@ $infantPrice = $old['infant_price'] ?? ($price['infant_price'] ?? 0);
                                         placeholder="Mô tả hoạt động, thời lượng, ghi chú..."><?= htmlspecialchars($detailNotes[$i] ?? '') ?></textarea>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Bữa ăn</label>
-                                    <input type="text" class="form-control" name="it_item_meal[]"
-                                        value="<?= htmlspecialchars($detailMeals[$i] ?? '') ?>"
-                                        placeholder="Sáng/Trưa/Tối">
+                                    <label class="form-label">Địa điểm</label>
+                                    <input type="text" class="form-control" name="it_item_location[]"
+                                        value="<?= htmlspecialchars($detailLocations[$i] ?? '') ?>"
+                                        placeholder="Tên địa điểm tham quan">
                                 </div>
                             </div>
                         </div>
@@ -406,17 +424,39 @@ $infantPrice = $old['infant_price'] ?? ($price['infant_price'] ?? 0);
         div.className = 'itinerary-row';
         div.innerHTML = `
         <div class="row g-3 align-items-end">
-          <div class="col-md-2">
+          <div class="col-md-1">
             <label class="form-label">Ngày</label>
-            <input type="number" class="form-control" name="itinerary_day[]" value="1">
+            <input type="number" class="form-control" name="it_item_day[]" value="1">
           </div>
-          <div class="col-md-4">
-            <label class="form-label">Điểm tham quan</label>
-            <input type="text" class="form-control" name="itinerary_location[]" value="">
+          <div class="col-md-2">
+            <label class="form-label">Bắt đầu</label>
+            <input type="time" class="form-control" name="it_item_start[]" value="08:00">
           </div>
-          <div class="col-md-6">
-            <label class="form-label">Hoạt động</label>
-            <textarea class="form-control" rows="2" name="itinerary_activity[]"></textarea>
+          <div class="col-md-2">
+            <label class="form-label">Kết thúc</label>
+            <input type="time" class="form-control" name="it_item_end[]" value="">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Buổi</label>
+            <select name="it_item_slot[]" class="form-select">
+              <option value="">-- Chọn buổi --</option>
+              <option value="morning">Sáng</option>
+              <option value="noon">Trưa</option>
+              <option value="afternoon">Chiều</option>
+              <option value="evening">Tối</option>
+            </select>
+          </div>
+          <div class="col-md-5">
+            <label class="form-label">Tiêu đề</label>
+            <input type="text" class="form-control" name="it_item_title[]" value="" placeholder="VD: Tham quan điểm A, di chuyển đến B">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Chi tiết</label>
+            <textarea class="form-control" rows="2" name="it_item_details[]" placeholder="Mô tả hoạt động, thời lượng, ghi chú..."></textarea>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Địa điểm</label>
+            <input type="text" class="form-control" name="it_item_location[]" value="" placeholder="Tên địa điểm tham quan">
           </div>
         </div>
       `;

@@ -58,23 +58,10 @@
 </head>
 
 <body>
-    <div class="sidebar">
-        <h3><i class="fas fa-map-marked-alt"></i> Quản trị Tripmate</h3>
-        <nav class="nav flex-column">
-            <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=tour_categories"><i class="fas fa-map"></i> Danh mục tour</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=suppliers"><i class="fas fa-handshake"></i> Nhà cung cấp</a>
-            <a class="nav-link active" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân sự</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_login">
-                <i class="fas fa-door-open"></i> Portal HDV
-            </a>
-
-        </nav>
-    </div>
+    <?php
+        $current_page = 'booking';
+        require_once __DIR__ . '/../../assets/templates/sidebar.php';
+    ?>
 
     <main class="main">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -100,13 +87,26 @@
                         <select class="form-select" name="schedule_id" id="schedule-select" required>
                             <option value="">-- Chọn tour và ngày khởi hành --</option>
                             <?php foreach ($schedules as $s): ?>
-                            <option value="<?= $s['id'] ?>" data-tour-id="<?= $s['tour_id'] ?>">
+                            <?php
+                                $tid = (int)($s['tour_id'] ?? 0);
+                                $supLabel = $suppliersByTour[$tid] ?? '';
+                            ?>
+                            <option value="<?= $s['id'] ?>"
+                                    data-tour-id="<?= $s['tour_id'] ?>"
+                                    data-supplier="<?= htmlspecialchars($supLabel) ?>">
                                 <?= htmlspecialchars($s['tour_title']) ?> -
-                                <?= htmlspecialchars($s['start_date']) ?> (Tối đa: <?= (int)$s['max_capacity'] ?> khách)
+                                <?= htmlspecialchars($s['start_date']) ?>
+                                <?php if ($supLabel !== ''): ?>
+                                    - NCC: <?= htmlspecialchars($supLabel) ?>
+                                <?php endif; ?>
+                                (Tối đa: <?= (int)$s['max_capacity'] ?> khách)
                             </option>
                             <?php endforeach; ?>
                         </select>
                         <input type="hidden" name="tour_id" id="tour-id-hidden" />
+                        <div class="form-text" id="supplier-info">
+                            Vui lòng chọn tour để xem nhà cung cấp / dịch vụ đi kèm.
+                        </div>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Số lượng khách</label>
@@ -171,10 +171,20 @@
     // Gán tour_id theo schedule được chọn
     const scheduleSelect = document.getElementById('schedule-select');
     const tourHidden = document.getElementById('tour-id-hidden');
+    const supplierInfo = document.getElementById('supplier-info');
     if (scheduleSelect && tourHidden) {
         scheduleSelect.addEventListener('change', function() {
             const opt = this.options[this.selectedIndex];
             tourHidden.value = opt.getAttribute('data-tour-id') || '';
+
+            if (supplierInfo) {
+                const sup = opt.getAttribute('data-supplier') || '';
+                if (sup) {
+                    supplierInfo.textContent = 'Nhà cung cấp / dịch vụ: ' + sup;
+                } else {
+                    supplierInfo.textContent = 'Tour này chưa gán nhà cung cấp trong hệ thống.';
+                }
+            }
         });
     }
 

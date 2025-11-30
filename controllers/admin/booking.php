@@ -8,7 +8,7 @@ function booking_index() {
     $status = $_GET['status'] ?? "";
     $items = booking_all($status);
 
-    // Chuẩn bị map tên khách hàng, tên tour và HDV để hiển thị đẹp hơn
+    // Chuẩn bị map tên khách hàng, tên tour, HDV và nhà cung cấp để hiển thị đẹp hơn
     $pdo = DB::get();
 
     // Map khách hàng theo id
@@ -25,6 +25,46 @@ function booking_index() {
     $toursById = [];
     foreach ($tourRows as $t) {
         $toursById[(int)$t['id']] = $t['title'] ?: ('Tour #' . $t['id']);
+    }
+
+    // Map nhà cung cấp chính theo tour (nếu tours có supplier_id)
+    $suppliersByTour = [];
+    $serviceTypeMap = [
+        'hotel'      => 'Khách sạn',
+        'restaurant' => 'Nhà hàng',
+        'transport'  => 'Vận chuyển',
+        'ticket'     => 'Vé tham quan',
+        'insurance'  => 'Bảo hiểm',
+        'guide'      => 'Hướng dẫn viên',
+        'meal'       => 'Ăn uống',
+        'entertain'  => 'Giải trí',
+        'other'      => 'Dịch vụ khác',
+    ];
+    try {
+        $stmt = $pdo->query("SELECT t.id AS tour_id, s.name, s.service_type
+                              FROM tours t
+                              LEFT JOIN tour_suppliers s ON t.supplier_id = s.id");
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rows as $r) {
+            $tid = (int)($r['tour_id'] ?? 0);
+            if ($tid <= 0) {
+                continue;
+            }
+            $label = $r['name'] ?? '';
+            if ($label === '' && isset($suppliersByTour[$tid])) {
+                continue;
+            }
+            if (!empty($r['service_type'])) {
+                $type = (string)$r['service_type'];
+                $typeLabel = $serviceTypeMap[$type] ?? $type;
+                $label .= $label !== '' ? ' - ' . $typeLabel : $typeLabel;
+            }
+            if ($label !== '') {
+                $suppliersByTour[$tid] = $label;
+            }
+        }
+    } catch (PDOException $e) {
+        $suppliersByTour = [];
     }
 
     // Map HDV chính theo tour (lấy theo lịch khởi hành đầu tiên tìm được)
@@ -56,9 +96,34 @@ function booking_detail() {
 
     if ($item) {
         if (!empty($item['tour_id'])) {
-            $stmt = $pdo->prepare("SELECT title FROM tours WHERE id = :id");
-            $stmt->execute(['id' => (int)$item['tour_id']]);
-            $tour = $stmt->fetch(PDO::FETCH_ASSOC);
+            try {
+                $stmt = $pdo->prepare("SELECT t.id AS tour_id, t.title, t.supplier_id, s.name AS supplier_name, s.service_type
+                                        FROM tours t
+                                        LEFT JOIN tour_suppliers s ON t.supplier_id = s.id
+                                        WHERE t.id = :id");
+                $stmt->execute(['id' => (int)$item['tour_id']]);
+                $tour = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($tour && !empty($tour['service_type'])) {
+                    $serviceTypeMap = [
+                        'hotel'      => 'Khách sạn',
+                        'restaurant' => 'Nhà hàng',
+                        'transport'  => 'Vận chuyển',
+                        'ticket'     => 'Vé tham quan',
+                        'insurance'  => 'Bảo hiểm',
+                        'guide'      => 'Hướng dẫn viên',
+                        'meal'       => 'Ăn uống',
+                        'entertain'  => 'Giải trí',
+                        'other'      => 'Dịch vụ khác',
+                    ];
+                    $type = (string)$tour['service_type'];
+                    $tour['service_type'] = $serviceTypeMap[$type] ?? $type;
+                }
+            } catch (PDOException $e) {
+                $stmt = $pdo->prepare("SELECT id AS tour_id, title FROM tours WHERE id = :id");
+                $stmt->execute(['id' => (int)$item['tour_id']]);
+                $tour = $stmt->fetch(PDO::FETCH_ASSOC);
+            }
         }
 
         if (!empty($item['customer_user_id'])) {
@@ -76,6 +141,26 @@ function booking_detail() {
         $stmt = $pdo->prepare("SELECT * FROM booking_guests WHERE booking_id = :id ORDER BY id ASC");
         $stmt->execute(['id' => (int)$id]);
         $guests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Lấy các dịch vụ/chi phí của nhà cung cấp trong tour này (nếu có)
+        $supplierExpenses = [];
+        if (!empty($tour['supplier_id']) && !empty($item['tour_id'])) {
+            try {
+                $sql = "SELECT te.*, s.name AS supplier_name
+                        FROM tour_expenses te
+                        LEFT JOIN tour_suppliers s ON te.supplier_id = s.id
+                        WHERE te.supplier_id = :sid AND te.tour_id = :tid
+                        ORDER BY te.date_incurred DESC";
+                $q = $pdo->prepare($sql);
+                $q->execute([
+                    'sid' => (int)$tour['supplier_id'],
+                    'tid' => (int)$item['tour_id'],
+                ]);
+                $supplierExpenses = $q->fetchAll(PDO::FETCH_ASSOC);
+            } catch (PDOException $e) {
+                $supplierExpenses = [];
+            }
+        }
     }
 
     require __DIR__ . '/../../views/booking/detail_booking.php';
@@ -87,6 +172,24 @@ function booking_create() {
 
     $tours = $tourModel->all();
     $schedules = $scheduleModel->all();
+
+    // Map nhà cung cấp chính theo tour từ dữ liệu tourModel
+    $suppliersByTour = [];
+    foreach ($tours as $t) {
+        $tid = (int)($t['id'] ?? 0);
+        if ($tid <= 0) {
+            continue;
+        }
+        $name = '';
+        if (!empty($t['supplier_name'])) {
+            $name = (string)$t['supplier_name'];
+        } elseif (!empty($t['supplier_text'])) {
+            $name = (string)$t['supplier_text'];
+        }
+        if ($name !== '') {
+            $suppliersByTour[$tid] = $name;
+        }
+    }
 
     // Lấy danh sách khách hàng (users role = traveler)
     $pdo = DB::get();
