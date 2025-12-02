@@ -20,7 +20,7 @@ class BookingModel extends BaseModel {
     }
 
     public function find($id) {
-        $query = "SELECT b.*, t.title as tour_name, u.full_name as customer_name, s.name as supplier_name, s.phone as supplier_phone, s.email as supplier_email
+        $query = "SELECT b.*, t.title as tour_name, u.full_name as customer_name, u.email as customer_email, u.phone as customer_phone, s.name as supplier_name, s.phone as supplier_phone, s.email as supplier_email
                   FROM bookings b
                   LEFT JOIN tours t ON b.tour_id = t.id
                   LEFT JOIN users u ON b.customer_user_id = u.id
@@ -32,34 +32,36 @@ class BookingModel extends BaseModel {
     }
 
     public function create($data) {
-        $query = "INSERT INTO bookings (tour_id, user_id, booking_code, number_of_guests, total_amount, status, special_requests) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?)";
-        $stmt = $this->pdo->prepare($query);
+        $sql = "INSERT INTO {$this->table_name} (tour_id, schedule_id, customer_user_id, sales_user_id, total_guests, booking_status, total_price)
+                VALUES (:tour_id, :schedule_id, :customer_user_id, :sales_user_id, :total_guests, :booking_status, :total_price)";
         
-        $booking_code = 'BK' . date('Ymd') . rand(1000, 9999);
+        $stmt = $this->pdo->prepare($sql);
         
-        return $stmt->execute([
-            $data['tour_id'] ?? null,
-            $data['user_id'] ?? null,
-            $booking_code,
-            $data['number_of_guests'] ?? 1,
-            $data['total_amount'] ?? 0,
-            $data['status'] ?? 'pending',
-            $data['special_requests'] ?? ''
-        ]);
+        $params = [
+            ':tour_id' => $data['tour_id'] ?? null,
+            ':schedule_id' => $data['schedule_id'] ?? null,
+            ':customer_user_id' => $data['customer_user_id'] ?? null,
+            ':sales_user_id' => $data['sales_user_id'] ?? null,
+            ':total_guests' => $data['total_guests'] ?? 1,
+            ':booking_status' => $data['booking_status'] ?? 'pending',
+            ':total_price' => $data['total_price'] ?? 0
+        ];
+        
+        if ($stmt->execute($params)) {
+            return $this->pdo->lastInsertId();
+        } else {
+            return false;
+        }
     }
 
     public function update($id, $data) {
-        $query = "UPDATE bookings SET tour_id = ?, user_id = ?, number_of_guests = ?, 
-                  total_amount = ?, status = ?, special_requests = ? WHERE id = ?";
+        $query = "UPDATE bookings SET tour_id = ?, total_guests = ?, total_price = ?, booking_status = ? WHERE id = ?";
         $stmt = $this->pdo->prepare($query);
         return $stmt->execute([
             $data['tour_id'] ?? null,
-            $data['user_id'] ?? null,
-            $data['number_of_guests'] ?? 1,
-            $data['total_amount'] ?? 0,
-            $data['status'] ?? 'pending',
-            $data['special_requests'] ?? '',
+            $data['total_guests'] ?? 1,
+            $data['total_price'] ?? 0,
+            $data['booking_status'] ?? 'pending',
             (int)$id
         ]);
     }
@@ -72,7 +74,7 @@ class BookingModel extends BaseModel {
 
     // Cập nhật trạng thái booking
     public function updateStatus($id, $status) {
-        $query = "UPDATE bookings SET status = ? WHERE id = ?";
+        $query = "UPDATE bookings SET booking_status = ? WHERE id = ?";
         $stmt = $this->pdo->prepare($query);
         return $stmt->execute([$status, (int)$id]);
     }
@@ -121,11 +123,17 @@ class BookingModel extends BaseModel {
     // Lấy lịch sử thanh toán
     public function getPaymentHistory($booking_id) {
         try {
-            $query = "SELECT * FROM payments WHERE booking_id = ? ORDER BY id DESC";
+            $query = "SELECT p.*, u.full_name as confirmed_by, p.payment_method as method
+                      FROM payments p
+                      LEFT JOIN users u ON p.created_by = u.id
+                      WHERE p.booking_id = ? 
+                      ORDER BY p.id DESC";
             $stmt = $this->pdo->prepare($query);
             $stmt->execute([(int)$booking_id]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            // Log the error for debugging if needed
+            // error_log($e->getMessage());
             return [];
         }
     }

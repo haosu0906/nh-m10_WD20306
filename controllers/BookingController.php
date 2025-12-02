@@ -1,90 +1,196 @@
 <?php
 require_once __DIR__ . '/../models/BookingModel.php';
+require_once __DIR__ . '/../models/BookingGuestsModel.php';
 require_once __DIR__ . '/../models/TourModel.php';
+require_once __DIR__ . '/../models/ScheduleModel.php';
+require_once __DIR__ . '/../models/UserModel.php';
+require_once __DIR__ . '/../models/SupplierModel.php';
+require_once __DIR__ . '/../assets/helpers/flash.php';
 
 class BookingController {
     private $bookingModel;
     private $tourModel;
-    
+
     public function __construct() {
         $this->bookingModel = new BookingModel();
         $this->tourModel = new TourModel();
     }
-    
+
     public function index() {
         $statusFilter = $_GET['status'] ?? null;
         $items = $this->bookingModel->all($statusFilter);
-        include 'views/booking/list_booking.php';
+        require 'views/booking/list_booking.php';
     }
-    
+
     public function create() {
-        $tours = $this->tourModel->all();
-        include 'views/booking/create_booking.php';
+        $scheduleModel = new ScheduleModel();
+        $userModel = new UserModel();
+        $tourModel = new TourModel();
+        $supplierModel = new SupplierModel();
+
+        $schedules = $scheduleModel->all();
+        $customers = $userModel->getCustomers();
+        $tours = $tourModel->all();
+
+        // Build a map of tour_id -> supplier_name
+        $suppliersByTour = [];
+        if (!empty($tours)) {
+            // Fetch all suppliers first to avoid N+1 queries
+            $allSuppliers = $supplierModel->getAll();
+            $suppliersMap = [];
+            foreach ($allSuppliers as $supplier) {
+                $suppliersMap[$supplier['id']] = $supplier['name'];
+            }
+
+            foreach ($tours as $tour) {
+                if (!empty($tour['supplier_id']) && isset($suppliersMap[$tour['supplier_id']])) {
+                    $suppliersByTour[$tour['id']] = $suppliersMap[$tour['supplier_id']];
+                } else {
+                    $suppliersByTour[$tour['id']] = '';
+                }
+            }
+        }
+        
+        require 'views/booking/create_booking.php';
+    }
+
+    public function store() {
+        $scheduleModel = new ScheduleModel();
+        $bookingGuestsModel = new BookingGuestsModel();
+        $tourModel = new TourModel();
+
+        // Basic validation
+        $schedule_id = $_POST['schedule_id'] ?? null;
+        $total_guests = filter_input(INPUT_POST, 'total_guests', FILTER_VALIDATE_INT);
+        $guest_full_names = $_POST['guest_full_name'] ?? [];
+
+        if (!isset($_SESSION['user_id'])) {
+            flash_set('error', 'Vui lòng đăng nhập để tạo booking.');
+            // Chuyển hướng đến trang đăng nhập chung hoặc trang admin/sales
+            header('Location: ' . BASE_URL . '?r=admin_login'); 
+            exit;
+        }
+
+        if (!$schedule_id || !$total_guests || $total_guests <= 0 || empty($guest_full_names[0])) {
+            flash_set('error', 'Vui lòng điền đầy đủ các thông tin bắt buộc: Lịch trình, số lượng khách và ít nhất một tên khách.');
+            header('Location: ' . BASE_URL . '?r=booking_create');
+            exit;
+        }
+
+        // Check capacity
+        $schedule = $scheduleModel->find($schedule_id);
+        if (!$schedule || (int)$schedule['max_capacity'] < $total_guests) {
+            flash_set('error', 'Số lượng khách vượt quá số chỗ còn lại của tour.');
+            header('Location: ' . BASE_URL . '?r=booking_create');
+            exit;
+        }
+
+        // DB Transaction
+        $this->bookingModel->beginTransaction();
+        try {
+            // Get price from tour
+            $tour = $tourModel->find($schedule['tour_id']);
+            $total_price = ($tour['price'] ?? 0) * $total_guests;
+
+            // 1. Create main booking
+            $bookingData = [
+                'tour_id' => $schedule['tour_id'],
+                'schedule_id' => $schedule_id,
+                'customer_user_id' => !empty($_POST['customer_user_id']) ? $_POST['customer_user_id'] : null,
+                'sales_user_id' => $_SESSION['user_id'], // Get from session
+                'total_guests' => $total_guests,
+                'booking_status' => 'pending', // Correct column name
+                'total_price' => $total_price,
+            ];
+            $bookingId = $this->bookingModel->create($bookingData);
+
+            if (!$bookingId) {
+                throw new Exception("Không thể tạo booking chính.");
+            }
+
+            // 2. Create guests for the booking
+            $guest_genders = $_POST['guest_gender'] ?? [];
+            $guest_dobs = $_POST['guest_dob'] ?? [];
+            $guest_docs = $_POST['guest_id_document_no'] ?? [];
+            $guest_notes = $_POST['guest_notes'] ?? [];
+
+            foreach ($guest_full_names as $index => $fullName) {
+                $fullName = trim($fullName);
+                if (empty($fullName)) continue;
+
+                $guestData = [
+                    'booking_id' => $bookingId,
+                    'full_name' => $fullName,
+                    'gender' => $guest_genders[$index] ?? 'other',
+                    'dob' => !empty($guest_dobs[$index]) ? $guest_dobs[$index] : null,
+                    'id_document_no' => $guest_docs[$index] ?? '',
+                    'notes' => $guest_notes[$index] ?? ''
+                ];
+                
+                if (!$bookingGuestsModel->create($guestData)) {
+                    throw new Exception("Không thể thêm khách '{$fullName}'.");
+                }
+            }
+
+            // If all good, commit
+            $this->bookingModel->commit();
+            flash_set('success', "Tạo booking #{$bookingId} thành công!");
+            header('Location: ' . BASE_URL . '?r=booking_detail&id=' . $bookingId);
+            exit;
+
+        } catch (Exception $e) {
+            // If anything fails, roll back
+            $this->bookingModel->rollBack();
+            flash_set('error', 'Đã có lỗi xảy ra: ' . $e->getMessage());
+            header('Location: ' . BASE_URL . '?r=booking_create');
+            exit;
+        }
     }
     
-    public function store() {
-        $errors = [];
-        
-        // Validate tour
-        if (empty($_POST['tour_id'])) {
-            $errors[] = 'Vui lòng chọn tour';
-        }
-        
-        // Validate ngày khởi hành
-        if (empty($_POST['start_date'])) {
-            $errors[] = 'Vui lòng chọn ngày khởi hành';
-        }
-        
-        // Validate số lượng khách
-        if (empty($_POST['total_guests']) || $_POST['total_guests'] < 1) {
-            $errors[] = 'Số lượng khách không hợp lệ';
-        }
-        
-        // Validate thông tin khách hàng
-        if (empty($_POST['customers'])) {
-            $errors[] = 'Vui lòng nhập thông tin khách hàng';
-        } else {
-            foreach ($_POST['customers'] as $index => $customer) {
-                if (empty($customer['full_name'])) {
-                    $errors[] = "Vui lòng nhập tên khách hàng " . ($index + 1);
-                }
-                if (empty($customer['phone'])) {
-                    $errors[] = "Vui lòng nhập số điện thoại khách hàng " . ($index + 1);
-                }
-            }
-        }
-        
-        // Kiểm tra số chỗ trống
-        if (empty($errors)) {
-            if (!$this->bookingModel->checkAvailableSeats($_POST['tour_id'], $_POST['total_guests'])) {
-                $errors[] = 'Tour không đủ chỗ trống cho số lượng khách yêu cầu';
-            }
-        }
-        
-        if (empty($errors)) {
-            // Lấy giá tour
-            $tour = $this->tourModel->find($_POST['tour_id']);
-            $totalPrice = $tour['price'] * $_POST['total_guests'];
-            
-            // Tạo booking
-            $bookingId = $this->bookingModel->create([
-                'tour_id' => $_POST['tour_id'],
-                'total_guests' => $_POST['total_guests'],
-                'booking_status' => 'pending',
-                'total_price' => $totalPrice,
-                'start_date' => $_POST['start_date'],
-                'customers' => $_POST['customers']
-            ]);
-            
+    public function detail() {
+        $id = $_GET['id'] ?? 0;
+        $item = $this->bookingModel->find($id);
+        if (!$item) {
+            flash_set('error', 'Không tìm thấy booking!');
             header('Location: ' . BASE_URL . '?r=booking');
             exit;
         }
         
-        // Nếu có lỗi, hiển thị lại form
-        $tours = $this->tourModel->all();
-        include 'views/booking/create_booking.php';
+        $guests = $this->bookingModel->getBookingGuests($id);
+        $statusHistory = $this->bookingModel->getStatusHistory($id);
+        $customer = $this->bookingModel->getCustomerInfo($item['customer_user_id'] ?? 0);
+        $total_paid = $this->bookingModel->getTotalPaid($id);
+        $payment_history = $this->bookingModel->getPaymentHistory($id);
+        $suppliers = $this->bookingModel->getTourSuppliers($item['tour_id'] ?? 0);
+        
+        require 'views/booking/detail_booking.php';
     }
-    
+
+    public function edit($id) {
+        if (!$id) {
+            flash_set('error', 'ID booking không hợp lệ.');
+            header('Location: ' . BASE_URL . '?r=booking');
+            exit;
+        }
+
+        $booking = $this->bookingModel->find($id);
+        if (!$booking) {
+            flash_set('error', 'Không tìm thấy booking để chỉnh sửa.');
+            header('Location: ' . BASE_URL . '?r=booking');
+            exit;
+        }
+
+        $item = $booking;
+        $guests = (new BookingGuestsModel())->findByBookingId($id);
+        $tours = $this->tourModel->all();
+        $customers = (new UserModel())->getCustomers();
+        $scheduleModel = new ScheduleModel();
+        $schedules = $scheduleModel->all();
+
+
+        require 'views/booking/edit_booking.php';
+    }
+
     public function updateStatus() {
         if (empty($_GET['id']) || empty($_GET['status'])) {
             die('Thiếu thông tin yêu cầu');
@@ -97,144 +203,138 @@ class BookingController {
         
         $this->bookingModel->updateStatus(
             $_GET['id'], 
-            $_GET['status'],
-            $_SESSION['user_id'] ?? null,
-            $_GET['note'] ?? null
+            $_GET['status']
         );
         
+        flash_set('success', 'Cập nhật trạng thái booking thành công.');
         header('Location: ' . $_SERVER['HTTP_REFERER']);
         exit;
     }
-    
-    public function detail() {
-        $id = $_GET['id'] ?? 0;
-        $item = $this->bookingModel->find($id);
-        $guests = $this->bookingModel->getBookingGuests($id);
-        $statusHistory = $this->bookingModel->getStatusHistory($id);
-        $customer = $this->bookingModel->getCustomerInfo($item['customer_user_id'] ?? 0);
-        $total_paid = $this->bookingModel->getTotalPaid($id);
-        $payment_history = $this->bookingModel->getPaymentHistory($id);
-        $suppliers = $this->bookingModel->getTourSuppliers($item['tour_id'] ?? 0);
-        
-        include 'views/booking/detail_booking.php';
-    }
 
-    // Hủy booking (POST/GET)
-    public function cancel() {
-        $id = $_GET['id'] ?? null;
-        if (!$id) {
-            header('Location: ' . BASE_URL . '?r=booking');
-            exit;
-        }
-
-        $ok = $this->bookingModel->updateStatus($id, 'canceled');
-        if (function_exists('flash_set')) {
-            if ($ok) flash_set('success', 'Booking đã được hủy'); else flash_set('danger', 'Không thể hủy booking');
-        }
-        // Redirect về trang chi tiết hoặc danh sách
-        $redirect = $_SERVER['HTTP_REFERER'] ?? (BASE_URL . '?r=booking');
-        header('Location: ' . $redirect);
-        exit;
-    }
-
-    // Gửi email tóm tắt booking tới khách hàng
-    public function sendEmail() {
-        $id = $_GET['id'] ?? null;
-        if (!$id) {
-            header('Location: ' . BASE_URL . '?r=booking');
-            exit;
-        }
-
-        $item = $this->bookingModel->find($id);
-        $customer = $this->bookingModel->getCustomerInfo($item['customer_user_id'] ?? 0);
-        $to = $customer['email'] ?? null;
-
-        $sent = false;
-        if ($to) {
-            $subject = "[Tripmate] Thông tin booking #" . $item['id'];
-            $message = "Xin chào " . ($customer['full_name'] ?? '') . "\n\n";
-            $message .= "Chi tiết booking:\n";
-            $message .= "Tour: " . ($item['tour_name'] ?? '') . "\n";
-            $message .= "Ngày đặt: " . ($item['date_booked'] ?? '') . "\n";
-            $message .= "Tổng tiền: " . number_format($item['total_price'] ?? 0,0,',','.') . " đ\n\n";
-            $message .= "Cám ơn.\n";
-
-            // Try to send mail (may require mail server)
-            $sent = @mail($to, $subject, $message, "From: no-reply@tripmate.local\r\n");
-        }
-
-        if (function_exists('flash_set')) {
-            if ($sent) flash_set('success', 'Email đã được gửi tới khách hàng'); else flash_set('warning', 'Không gửi được email (kiểm tra cấu hình mail trên máy)');
-        }
-
-        $redirect = $_SERVER['HTTP_REFERER'] ?? (BASE_URL . '?r=booking');
-        header('Location: ' . $redirect);
-        exit;
-    }
-
-    // In / Xuất PDF (render printable html; real PDF generation not included)
-    public function pdf() {
-        $id = $_GET['id'] ?? 0;
-        $item = $this->bookingModel->find($id);
-        $guests = $this->bookingModel->getBookingGuests($id);
-        $customer = $this->bookingModel->getCustomerInfo($item['customer_user_id'] ?? 0);
-        $total_paid = $this->bookingModel->getTotalPaid($id);
-        $payment_history = $this->bookingModel->getPaymentHistory($id);
-        $suppliers = $this->bookingModel->getTourSuppliers($item['tour_id'] ?? 0);
-
-        // Nếu có Dompdf (composer) -> generate PDF, ngược lại render HTML printable
-        $vendor = __DIR__ . '/../../vendor/autoload.php';
-        if (file_exists($vendor)) {
-            require_once $vendor;
-            if (class_exists('\Dompdf\Dompdf')) {
-                $dompdf = new \Dompdf\Dompdf();
-                ob_start();
-                include __DIR__ . '/../views/booking/booking_pdf.php';
-                $html = ob_get_clean();
-                $dompdf->loadHtml($html);
-                $dompdf->setPaper('A4', 'portrait');
-                $dompdf->render();
-                $dompdf->stream("booking_{$id}.pdf", ["Attachment" => 0]);
-                exit;
-            }
-        }
-
-        // Fallback: render printable HTML
-        include 'views/booking/booking_pdf.php';
-    }
-
-    // Show edit form
-    public function edit() {
-        $id = $_GET['id'] ?? 0;
-        $item = $this->bookingModel->find($id);
-        $tours = $this->tourModel->all();
-        include 'views/booking/edit_booking.php';
-    }
-
-    // Handle update POST
-    public function update() {
+    public function update($id = 0) {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '?r=booking'); exit;
+            header('Location: ' . BASE_URL . '?r=booking');
+            exit;
         }
-        $id = $_POST['id'] ?? null;
-        if (!$id) { header('Location: ' . BASE_URL . '?r=booking'); exit; }
 
-        $data = [
-            'tour_id' => $_POST['tour_id'] ?? null,
-            'user_id' => $_POST['user_id'] ?? null,
-            'number_of_guests' => $_POST['number_of_guests'] ?? 1,
-            'total_amount' => $_POST['total_amount'] ?? 0,
-            'status' => $_POST['status'] ?? 'pending',
-            'special_requests' => $_POST['special_requests'] ?? ''
+        $id = (int)($_POST['id'] ?? $id);
+        if ($id <= 0) {
+            flash_set('error', 'ID booking không hợp lệ.');
+            header('Location: ' . BASE_URL . '?r=booking');
+            exit;
+        }
+
+        $allowedStatuses = ['pending', 'deposit', 'completed', 'canceled'];
+        $payload = [
+            'tour_id' => isset($_POST['tour_id']) ? (int)$_POST['tour_id'] : null,
+            'total_guests' => isset($_POST['number_of_guests']) ? (int)$_POST['number_of_guests'] : null,
+            'total_price' => isset($_POST['total_amount']) ? (float)$_POST['total_amount'] : null,
+            'booking_status' => in_array($_POST['status'] ?? 'pending', $allowedStatuses) ? $_POST['status'] : 'pending',
         ];
 
-        $ok = $this->bookingModel->update($id, $data);
-        if (function_exists('flash_set')) {
-            if ($ok) flash_set('success', 'Cập nhật booking thành công'); else flash_set('danger', 'Cập nhật thất bại');
+        $ok = $this->bookingModel->update($id, $payload);
+        if ($ok) {
+            flash_set('success', 'Lưu thay đổi booking thành công.');
+            header('Location: ' . BASE_URL . '?r=booking_detail&id=' . $id);
+            exit;
         }
 
-        header('Location: ' . BASE_URL . '?r=booking_detail&id=' . urlencode($id));
+        flash_set('error', 'Không thể lưu thay đổi booking.');
+        header('Location: ' . BASE_URL . '?r=booking_edit&id=' . $id);
         exit;
+    }
+
+    public function cancel() {
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id <= 0) {
+            die('Thiếu ID');
+        }
+
+        $old = $this->bookingModel->find($id);
+        $ok = $this->bookingModel->updateStatus($id, 'canceled');
+
+        if ($ok) {
+            try {
+                $pdo = $this->bookingModel->getConnection();
+                $stmt = $pdo->prepare("INSERT INTO booking_status_logs (booking_id, old_status, new_status, changed_by_user_id, changed_at) VALUES (?, ?, ?, ?, NOW())");
+                $stmt->execute([$id, $old['booking_status'] ?? 'pending', 'canceled', $_SESSION['user_id'] ?? 0]);
+            } catch (Exception $e) {}
+
+            flash_set('success', 'Đã hủy booking.');
+            header('Location: ' . BASE_URL . '?r=booking_detail&id=' . $id);
+            exit;
+        }
+
+        flash_set('error', 'Không thể hủy booking.');
+        header('Location: ' . BASE_URL . '?r=booking_detail&id=' . $id);
+        exit;
+    }
+
+    public function sendEmail() {
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id <= 0) {
+            flash_set('error', 'Thiếu ID booking.');
+            header('Location: ' . BASE_URL . '?r=booking');
+            exit;
+        }
+
+        $booking = $this->bookingModel->find($id);
+        if (!$booking) {
+            flash_set('error', 'Không tìm thấy booking.');
+            header('Location: ' . BASE_URL . '?r=booking');
+            exit;
+        }
+
+        $to = trim((string)($booking['customer_email'] ?? ''));
+        $subject = 'Xác nhận Booking #' . $id;
+        $body = 'Khách: ' . ($booking['customer_name'] ?? '') . "\n" .
+                'Tour: ' . ($booking['tour_name'] ?? '') . "\n" .
+                'Số khách: ' . ($booking['total_guests'] ?? '') . "\n" .
+                'Tổng tiền: ' . ($booking['total_price'] ?? '') . "\n" .
+                'Trạng thái: ' . ($booking['booking_status'] ?? '') . "\n";
+
+        $sent = false;
+        if ($to !== '' && function_exists('mail')) {
+            $sent = @mail($to, $subject, $body);
+        }
+
+        if (!$sent) {
+            $folder = ensure_upload_path('emails');
+            $path = PATH_ASSETS_UPLOADS . $folder . '/' . time() . '-booking-' . $id . '.txt';
+            @file_put_contents($path, $body);
+            $sent = true;
+        }
+
+        if ($sent) {
+            flash_set('success', 'Đã gửi email xác nhận (demo).');
+        } else {
+            flash_set('error', 'Không thể gửi email.');
+        }
+
+        header('Location: ' . BASE_URL . '?r=booking_detail&id=' . $id);
+        exit;
+    }
+
+    public function pdf() {
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id <= 0) {
+            flash_set('error', 'Thiếu ID booking.');
+            header('Location: ' . BASE_URL . '?r=booking');
+            exit;
+        }
+
+        $item = $this->bookingModel->find($id);
+        if (!$item) {
+            flash_set('error', 'Không tìm thấy booking.');
+            header('Location: ' . BASE_URL . '?r=booking');
+            exit;
+        }
+
+        $customer = $this->bookingModel->getCustomerInfo($item['customer_user_id'] ?? 0);
+        $guests = $this->bookingModel->getBookingGuests($id);
+        $suppliers = $this->bookingModel->getTourSuppliers($item['tour_id'] ?? 0);
+
+        require 'views/booking/booking_pdf.php';
     }
 }
 ?>

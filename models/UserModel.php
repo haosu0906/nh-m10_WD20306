@@ -26,6 +26,13 @@ class UserModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getCustomers() {
+        $query = "SELECT * FROM users WHERE role = 'traveler' ORDER BY id DESC";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function all() {
         $query = "SELECT * FROM " . $this->table_name . " ORDER BY id DESC";
         $stmt = $this->pdo->prepare($query);

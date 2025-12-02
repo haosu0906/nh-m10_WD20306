@@ -35,6 +35,11 @@ class BookingGuestsModel extends BaseModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function findByBookingId($booking_id)
+    {
+        return $this->getByBooking($booking_id);
+    }
+
     public function create($data)
     {
         $sql = "INSERT INTO {$this->table} (booking_id, full_name, gender, dob, id_document_no, is_checked_in, notes)

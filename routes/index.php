@@ -126,6 +126,8 @@ switch ($route) {
         $staffController->delete($_GET['id'] ?? 0); break;
     case 'staff_fix_data':
         $staffController->fixData(); break;
+    case 'staff_all_users':
+        $staffController->allUsers(); break;
 
     case 'schedules':
         $scheduleController->index(); break;
@@ -172,7 +174,7 @@ switch ($route) {
     case "booking/detail":
         $bookingController->detail(); break;
     case 'booking_edit':
-        $bookingController->edit(); break;
+        $bookingController->edit($_GET['id'] ?? 0); break;
     case 'booking_update':
         if ($method === 'POST') $bookingController->update(); break;
     case 'booking_cancel':
@@ -183,6 +185,8 @@ switch ($route) {
         $bookingController->pdf(); break;
 
     // Payments
+    case 'booking_add_payment':
+        $paymentController->create($_GET['id'] ?? 0); break;
     case 'payments':
         $paymentController->index(); break;
     case 'payments_create':

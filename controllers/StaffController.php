@@ -13,22 +13,18 @@ class StaffController {
             $pdo = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME, DB_USERNAME, DB_PASSWORD);
             $stmt = $pdo->prepare("SELECT * FROM users WHERE role != 'guide' ORDER BY created_at DESC");
             $stmt->execute();
-            $staff = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             // Debug: Log error if no staff
-            if(empty($staff)) {
+            if(empty($items)) {
                 error_log("No staff found in users table");
             }
             
         } catch(Exception $e) {
             error_log("Error in StaffController::index: " . $e->getMessage());
-            $staff = [];
+            $items = [];
         }
         
-        // Make variables available to view
-        $data = [
-            'staff' => $staff,
-        ];
         require __DIR__ . '/../views/staff/index.php';
     }
 
@@ -191,7 +187,7 @@ class StaffController {
             $pdo->exec('DELETE FROM guides_info WHERE user_id IN (12, 13, 16)');
             
             // Thêm data cho user 12
-            $stmt = $pdo->prepare("INSERT INTO guides_info (user_id, identity_no, guide_type, certificate_no, languages, experience_years, specialized_route, health_status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO guides_info (user_id, identity_no, guide_type, certificate_no, languages, experience_years, specialized_route, health_status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)" );
             $stmt->execute([12, '001234567890', 'domestic', 'HDV-2024012', 'Tiếng Việt, English', 3, 'Miền Trung Việt Nam, Đà Nẵng', 'Sức khỏe tốt', 'HDV trẻ, năng động']);
             
             // Thêm data cho user 13
@@ -209,5 +205,17 @@ class StaffController {
             header('Location: ' . BASE_URL . '?r=staff&error=' . urlencode($e->getMessage()));
             exit;
         }
+    }
+
+    public function allUsers(){
+        try {
+            $pdo = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME, DB_USERNAME, DB_PASSWORD);
+            $stmt = $pdo->query("SELECT * FROM users ORDER BY created_at DESC");
+            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch(Exception $e) {
+            error_log("Error in StaffController::allUsers: " . $e->getMessage());
+            $items = [];
+        }
+        require __DIR__ . '/../views/staff/index_basic.php';
     }
 }

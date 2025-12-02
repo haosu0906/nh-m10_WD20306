@@ -313,7 +313,16 @@
                             <tr>
                                 <td><?= !empty($payment['payment_date']) ? date('d/m/Y H:i', strtotime($payment['payment_date'])) : 'N/A' ?></td>
                                 <td><?= number_format($payment['amount'] ?? 0, 0, ',', '.') ?> đ</td>
-                                <td><?= htmlspecialchars($payment['method'] ?? 'N/A') ?></td>
+                                <td>
+                                    <?php
+                                        $method = $payment['method'] ?? 'N/A';
+                                        $methodLabels = [
+                                            'bank_transfer' => 'Chuyển khoản',
+                                            'cash' => 'Tiền mặt'
+                                        ];
+                                        echo htmlspecialchars($methodLabels[$method] ?? ucfirst(str_replace('_', ' ', $method)));
+                                    ?>
+                                </td>
                                 <td><?= htmlspecialchars($payment['confirmed_by'] ?? 'N/A') ?></td>
                                 <td>
                                     <?php if (($payment['status'] ?? '') === 'completed'): ?>

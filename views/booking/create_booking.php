@@ -72,10 +72,13 @@
             <a href="<?= BASE_URL ?>?r=booking" class="btn btn-outline-secondary">Quay lại danh sách</a>
         </div>
 
-        <?php if (!empty($_GET['error'])): ?>
-        <div class="alert alert-danger">
-            <?= htmlspecialchars($_GET['error']) ?>
-        </div>
+        <?php
+        $flash = flash_get();
+        if ($flash):
+        ?>
+            <div class="alert alert-<?= htmlspecialchars($flash['type']) ?>" role="alert">
+                <?= htmlspecialchars($flash['message']) ?>
+            </div>
         <?php endif; ?>
 
         <form method="post" action="<?= BASE_URL ?>?r=booking_store">

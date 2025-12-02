@@ -44,9 +44,13 @@ class PaymentController
     }
 
     // Form tạo thanh toán mới
-    public function create()
+    public function create($bookingId = 0)
     {
-        $bookingId = (int)($_GET['booking_id'] ?? 0);
+        $bookingId = (int)$bookingId;
+        if ($bookingId === 0) {
+            $bookingId = (int)($_GET['booking_id'] ?? 0);
+        }
+
         $payment = null;
         if ($bookingId > 0) {
             $stmt = $this->pdo->prepare("SELECT b.*, t.title AS tour_title
