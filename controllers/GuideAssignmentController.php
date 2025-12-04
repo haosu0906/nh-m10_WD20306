@@ -148,7 +148,7 @@ class GuideAssignmentController
         try {
             $stmt = $this->pdo->prepare("INSERT INTO guide_assignments 
                                          (tour_id, guide_user_id, assignment_type, status, notes, assignment_date) 
-                                         VALUES (:tid, :gid, :type, 'assigned', :notes, :ad)");
+                                         VALUES (:tid, :gid, :type, 'pending', :notes, :ad)");
             $result = $stmt->execute([
                 ':tid' => $tourId,
                 ':gid' => $guideUserId,
@@ -160,7 +160,7 @@ class GuideAssignmentController
             try {
                 $stmt2 = $this->pdo->prepare("INSERT INTO guide_assignments 
                                               (tour_id, guide_user_id, assignment_type, status, notes) 
-                                              VALUES (:tid, :gid, :type, 'assigned', :notes)");
+                                              VALUES (:tid, :gid, :type, 'pending', :notes)");
                 $result = $stmt2->execute([
                     ':tid' => $tourId,
                     ':gid' => $guideUserId,
