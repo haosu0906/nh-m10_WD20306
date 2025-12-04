@@ -20,7 +20,7 @@ class BookingModel extends BaseModel {
     }
 
     public function find($id) {
-        $query = "SELECT b.*, t.title as tour_name, u.full_name as customer_name, u.email as customer_email, u.phone as customer_phone, s.name as supplier_name, s.phone as supplier_phone, s.email as supplier_email
+        $query = "SELECT b.*, t.title as tour_name, u.full_name as customer_name, s.name as supplier_name, s.phone as supplier_phone, s.email as supplier_email
                   FROM bookings b
                   LEFT JOIN tours t ON b.tour_id = t.id
                   LEFT JOIN users u ON b.customer_user_id = u.id
@@ -55,13 +55,16 @@ class BookingModel extends BaseModel {
     }
 
     public function update($id, $data) {
-        $query = "UPDATE bookings SET tour_id = ?, total_guests = ?, total_price = ?, booking_status = ? WHERE id = ?";
+        $query = "UPDATE bookings SET tour_id = ?, user_id = ?, number_of_guests = ?, 
+                  total_amount = ?, status = ?, special_requests = ? WHERE id = ?";
         $stmt = $this->pdo->prepare($query);
         return $stmt->execute([
             $data['tour_id'] ?? null,
-            $data['total_guests'] ?? 1,
-            $data['total_price'] ?? 0,
-            $data['booking_status'] ?? 'pending',
+            $data['user_id'] ?? null,
+            $data['number_of_guests'] ?? 1,
+            $data['total_amount'] ?? 0,
+            $data['status'] ?? 'pending',
+            $data['special_requests'] ?? '',
             (int)$id
         ]);
     }
@@ -74,9 +77,29 @@ class BookingModel extends BaseModel {
 
     // Cập nhật trạng thái booking
     public function updateStatus($id, $status) {
-        $query = "UPDATE bookings SET booking_status = ? WHERE id = ?";
-        $stmt = $this->pdo->prepare($query);
-        return $stmt->execute([$status, (int)$id]);
+        $id = (int)$id;
+        try {
+            $stmt0 = $this->pdo->prepare("SELECT booking_status FROM bookings WHERE id = ?");
+            $stmt0->execute([$id]);
+            $row = $stmt0->fetch(PDO::FETCH_ASSOC);
+            $old = $row['booking_status'] ?? null;
+
+            $stmt = $this->pdo->prepare("UPDATE bookings SET booking_status = ? WHERE id = ?");
+            $ok = $stmt->execute([$status, $id]);
+
+            if ($ok && $old !== null && $old !== $status) {
+                try {
+                    $changedBy = $_SESSION['user_id'] ?? null;
+                    $stmt2 = $this->pdo->prepare("INSERT INTO booking_status_logs (booking_id, old_status, new_status, changed_by, changed_at) VALUES (?, ?, ?, ?, NOW())");
+                    $stmt2->execute([$id, $old, $status, $changedBy]);
+                } catch (Exception $e) {
+                    // ignore if log table missing
+                }
+            }
+            return $ok;
+        } catch (Exception $e) {
+            return false;
+        }
     }
 
     // Lấy booking theo user
@@ -101,14 +124,26 @@ class BookingModel extends BaseModel {
 
     // Lấy lịch sử thay đổi trạng thái
     public function getStatusHistory($booking_id) {
-        // Bảng booking_status_logs có thể không tồn tại, trả về array rỗng
+        $booking_id = (int)$booking_id;
         try {
-            $query = "SELECT * FROM booking_status_logs WHERE booking_id = ? ORDER BY id DESC LIMIT 10";
+            $query = "SELECT l.*, u.full_name AS changed_by_name
+                      FROM booking_status_logs l
+                      LEFT JOIN users u ON l.changed_by = u.id
+                      WHERE l.booking_id = ?
+                      ORDER BY l.id DESC
+                      LIMIT 20";
             $stmt = $this->pdo->prepare($query);
-            $stmt->execute([(int)$booking_id]);
+            $stmt->execute([$booking_id]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            return [];
+            try {
+                $query2 = "SELECT * FROM booking_status_logs WHERE booking_id = ? ORDER BY id DESC LIMIT 20";
+                $stmt2 = $this->pdo->prepare($query2);
+                $stmt2->execute([$booking_id]);
+                return $stmt2->fetchAll(PDO::FETCH_ASSOC);
+            } catch (Exception $e2) {
+                return [];
+            }
         }
     }
 
@@ -153,6 +188,7 @@ class BookingModel extends BaseModel {
 
     // Lấy danh sách nhà cung cấp cùng dịch vụ cho tour
     public function getTourSuppliers($tour_id) {
+        $tour_id = (int)$tour_id;
         try {
             $query = "SELECT DISTINCT s.id, s.name, s.type, s.phone, s.email, s.contact_person,
                              te.expense_type as service_type, te.description as service_description
@@ -161,11 +197,25 @@ class BookingModel extends BaseModel {
                       WHERE te.tour_id = ?
                       ORDER BY s.id, te.expense_type";
             $stmt = $this->pdo->prepare($query);
-            $stmt->execute([(int)$tour_id]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (Exception $e) {
-            return [];
-        }
+            $stmt->execute([$tour_id]);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if (!empty($rows)) return $rows;
+        } catch (Exception $e) {}
+
+        try {
+            $query2 = "SELECT DISTINCT s.id, s.name, s.type, s.phone, s.email, s.contact_person,
+                               ts.service_type as service_type, ts.description as service_description
+                        FROM tour_suppliers ts
+                        JOIN suppliers s ON ts.supplier_id = s.id
+                        WHERE ts.tour_id = ?
+                        ORDER BY s.id, ts.service_type";
+            $stmt2 = $this->pdo->prepare($query2);
+            $stmt2->execute([$tour_id]);
+            $rows2 = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+            if (!empty($rows2)) return $rows2;
+        } catch (Exception $e2) {}
+
+        return [];
     }
 }
 ?>

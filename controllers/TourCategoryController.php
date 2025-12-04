@@ -96,6 +96,16 @@ class TourCategoryController {
         exit;
     }
 
+    public function show($id){
+        $item = $this->model->find($id);
+        if (!$item) {
+            header('Location: ' . BASE_URL . '?r=tour_categories');
+            exit;
+        }
+        $types = $this->types;
+        require __DIR__ . '/../views/tour_categories/show.php';
+    }
+
     protected function validate($data, $ignoreId = null)
     {
         $errors = [];

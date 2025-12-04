@@ -1,23 +1,95 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Static Site</title>
-    <link rel="stylesheet" href="css/main.css">
-</head>
-<body>
-    <header>
-        <!-- Include header component here -->
-    </header>
-    
-    <main>
-        <h1>Welcome to My Static Site</h1>
-        <p>This is the homepage of my static website. Here you can find various information and links to other pages.</p>
-    </main>
-    
-    <footer>
-        <!-- Include footer component here -->
-    </footer>
-</body>
-</html>
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <h5 class="mb-0 text-primary fw-bold">
+            <i class="fas fa-file-invoice-dollar me-2"></i> Booking Mới Nhất
+        </h5>
+        <a href="booking_list.php" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="ps-4">Mã đơn</th>
+                        <th scope="col">Khách hàng</th>
+                        <th scope="col">Tour đăng ký</th>
+                        <th scope="col">Ngày đi</th>
+                        <th scope="col">Tổng tiền</th>
+                        <th scope="col">Trạng thái</th>
+                        <th scope="col" class="text-center">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="ps-4 fw-bold text-primary">#BK-2510</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <img src="https://ui-avatars.com/api/?name=Nguyen+Van+A&background=random" class="rounded-circle me-2" width="30">
+                                <div>
+                                    <span class="d-block fw-bold">Nguyễn Văn An</span>
+                                    <small class="text-muted">0912.345.678</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            Hà Giang - Mùa Hoa Tam Giác Mạch
+                            <br><small class="text-muted">3 ngày 2 đêm</small>
+                        </td>
+                        <td>25/12/2025</td>
+                        <td class="fw-bold">5.000.000 đ</td>
+                        <td><span class="badge bg-warning text-dark">Chờ xử lý</span></td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-primary" title="Xử lý ngay"><i class="fas fa-edit"></i></button>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="ps-4 text-muted">#BK-2509</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <img src="https://ui-avatars.com/api/?name=Tran+Thi+B&background=random" class="rounded-circle me-2" width="30">
+                                <div>
+                                    <span class="d-block fw-bold">Trần Thị Bích</span>
+                                    <small class="text-muted">0987.654.321</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            Đà Nẵng - Hội An - Bà Nà Hills
+                            <br><small class="text-muted">4 ngày 3 đêm</small>
+                        </td>
+                        <td>01/01/2026</td>
+                        <td class="fw-bold">12.500.000 đ</td>
+                        <td><span class="badge bg-info">Đã cọc 50%</span></td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-light border" title="Xem chi tiết"><i class="fas fa-eye"></i></button>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="ps-4 text-muted">#BK-2508</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <img src="https://ui-avatars.com/api/?name=Le+Van+C&background=random" class="rounded-circle me-2" width="30">
+                                <div>
+                                    <span class="d-block fw-bold">Lê Văn Cường</span>
+                                    <small class="text-muted">0909.111.222</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            Phú Quốc - Đảo Ngọc
+                            <br><small class="text-muted">3 ngày 2 đêm</small>
+                        </td>
+                        <td>20/12/2025</td>
+                        <td class="fw-bold text-success">8.000.000 đ</td>
+                        <td><span class="badge bg-success">Hoàn thành</span></td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-light border" title="Xem chi tiết"><i class="fas fa-eye"></i></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

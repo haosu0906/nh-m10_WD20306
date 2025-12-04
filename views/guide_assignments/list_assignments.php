@@ -91,7 +91,7 @@ require_once __DIR__ . '/../../assets/configs/env.php';
 
     .assignments-grid-header {
         display: grid;
-        grid-template-columns: 60px 200px 250px 120px 140px 120px;
+        grid-template-columns: 60px minmax(220px, 1.8fr) minmax(280px, 2fr) 140px 140px 120px;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         font-weight: 600;
@@ -119,8 +119,11 @@ require_once __DIR__ . '/../../assets/configs/env.php';
 
     .assignments-grid-row {
         display: grid;
-        grid-template-columns: 60px 200px 250px 120px 140px 120px;
-        border-bottom: 1px solid #e5e7eb;
+        grid-template-columns: 60px minmax(220px, 1.8fr) minmax(280px, 2fr) 140px 140px 120px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        margin-bottom: 6px;
+        background: #fff;
         transition: background-color 0.2s;
     }
 
@@ -129,12 +132,12 @@ require_once __DIR__ . '/../../assets/configs/env.php';
     }
 
     .assignments-grid-cell {
-        padding: 16px 12px;
+        padding: 18px 14px;
         border-right: 1px solid #e5e7eb;
         display: flex;
         align-items: center;
-        font-size: 0.875rem;
-        min-height: 80px;
+        font-size: 0.9rem;
+        min-height: 82px;
     }
 
     .assignments-grid-cell:last-child {
@@ -274,7 +277,27 @@ require_once __DIR__ . '/../../assets/configs/env.php';
 </head>
 
 <body>
-    <?php $current_page='guide_assignments'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
+    <div class="sidebar">
+        <h3><i class="fas fa-map-marked-alt"></i> Quản trị Tripmate</h3>
+        <nav class="nav flex-column">
+            <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=tour_categories"><i class="fas fa-layer-group"></i> Danh mục tour</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=suppliers"><i class="fas fa-handshake"></i> Nhà cung cấp</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
+            <a class="nav-link active" href="<?= BASE_URL ?>?r=guide_assignments"><i class="fas fa-user-check"></i> Phân công HDV</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_schedules"><i class="fas fa-calendar-alt"></i> Lịch HDV</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_ratings"><i class="fas fa-star"></i> Đánh giá HDV</a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_login">
+                <i class="fas fa-door-open"></i> Portal HDV
+            </a>
+            <a class="nav-link" href="<?= BASE_URL ?>?r=admin_login">
+                <i class="fas fa-user-shield"></i> Đăng nhập Admin
+            </a>
+        </nav>
+    </div>
 
     <main class="main">
         <div class="d-flex justify-content-between align-items-center mb-4 fade-in">

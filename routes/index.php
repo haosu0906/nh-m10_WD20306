@@ -46,6 +46,8 @@ switch ($route) {
         $catController->update($_GET['id'] ?? 0); break;
     case 'tour_categories_delete':
         $catController->delete($_GET['id'] ?? 0); break;
+    case 'tour_categories_show':
+        $catController->show($_GET['id'] ?? 0); break;
 
     case 'tours':
         if ($method === 'GET') $tourController->index();
@@ -78,6 +80,16 @@ switch ($route) {
         $supplierController->index(); break;
     case 'suppliers_show':
         $supplierController->show($_GET['id'] ?? 0); break;
+    case 'suppliers_create':
+        $supplierController->create(); break;
+    case 'suppliers_store':
+        if ($method === 'POST') $supplierController->store(); break;
+    case 'suppliers_edit':
+        $supplierController->edit($_GET['id'] ?? 0); break;
+    case 'suppliers_update':
+        if ($method === 'POST') $supplierController->update($_GET['id'] ?? 0); break;
+    case 'suppliers_delete':
+        $supplierController->delete($_GET['id'] ?? 0); break;
 
     case 'guides':
         $guideController->index(); break;
@@ -126,13 +138,13 @@ switch ($route) {
         $staffController->delete($_GET['id'] ?? 0); break;
     case 'staff_fix_data':
         $staffController->fixData(); break;
-    case 'staff_all_users':
-        $staffController->allUsers(); break;
 
     case 'schedules':
         $scheduleController->index(); break;
     case 'schedules_calendar':
         $scheduleController->calendar(); break;
+    case 'schedules_show':
+        $scheduleController->show($_GET['id'] ?? 0); break;
     case 'schedules_create':
         $scheduleController->create(); break;
     case 'schedules_store':
@@ -183,6 +195,8 @@ switch ($route) {
         $bookingController->sendEmail(); break;
     case 'booking_pdf':
         $bookingController->pdf(); break;
+    case 'booking_delete':
+        $bookingController->delete($_GET['id'] ?? 0); break;
 
     // Payments
     case 'booking_add_payment':

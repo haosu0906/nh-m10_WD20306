@@ -31,32 +31,95 @@ class ScheduleModel extends BaseModel {
     }
 
     public function create($data) {
-        $query = "INSERT INTO tour_schedules (tour_id, start_date, end_date, guide_user_id, driver_user_id, max_capacity) 
-                  VALUES (?, ?, ?, ?, ?, ?)";
-        $stmt = $this->pdo->prepare($query);
-        return $stmt->execute([
-            $data['tour_id'] ?? null,
-            $data['start_date'] ?? '',
-            $data['end_date'] ?? '',
-            $data['guide_user_id'] ?? null,
-            $data['driver_user_id'] ?? null,
-            $data['max_capacity'] ?? 20,
-        ]);
+        $driverId = $data['driver_user_id'] ?? null;
+        if (empty($driverId)) {
+            try {
+                $stmtD = $this->pdo->query("SELECT id FROM users WHERE role = 'driver' ORDER BY id ASC LIMIT 1");
+                $rowD = $stmtD->fetch(PDO::FETCH_ASSOC);
+                if ($rowD) { $driverId = (int)$rowD['id']; }
+            } catch (PDOException $e) { /* ignore */ }
+            if (empty($driverId) && !empty($data['guide_user_id'])) {
+                $driverId = (int)$data['guide_user_id'];
+            }
+        }
+
+        try {
+            $query = "INSERT INTO tour_schedules (tour_id, start_date, end_date, guide_user_id, driver_user_id, max_capacity) 
+                      VALUES (?, ?, ?, ?, ?, ?)";
+            $stmt = $this->pdo->prepare($query);
+            return $stmt->execute([
+                $data['tour_id'] ?? null,
+                $data['start_date'] ?? '',
+                $data['end_date'] ?? '',
+                $data['guide_user_id'] ?? null,
+                $driverId ?? 0,
+                $data['max_capacity'] ?? 20,
+            ]);
+        } catch (PDOException $e) {
+            try {
+                $stmtU = $this->pdo->query("SELECT id FROM users ORDER BY id ASC LIMIT 1");
+                $rowU = $stmtU->fetch(PDO::FETCH_ASSOC);
+                $fallbackDriver = $rowU ? (int)$rowU['id'] : ($data['guide_user_id'] ?? null);
+                $stmt3 = $this->pdo->prepare("INSERT INTO tour_schedules (tour_id, start_date, end_date, guide_user_id, driver_user_id, max_capacity) VALUES (?, ?, ?, ?, ?, ?)");
+                return $stmt3->execute([
+                    $data['tour_id'] ?? null,
+                    $data['start_date'] ?? '',
+                    $data['end_date'] ?? '',
+                    $data['guide_user_id'] ?? null,
+                    $fallbackDriver ?? 0,
+                    $data['max_capacity'] ?? 20,
+                ]);
+            } catch (PDOException $e2) {
+                return false;
+            }
+        }
     }
 
     public function update($id, $data) {
-        $query = "UPDATE tour_schedules SET tour_id = ?, start_date = ?, end_date = ?, guide_user_id = ?, 
-                  driver_user_id = ?, max_capacity = ? WHERE id = ?";
-        $stmt = $this->pdo->prepare($query);
-        return $stmt->execute([
-            $data['tour_id'] ?? null,
-            $data['start_date'] ?? '',
-            $data['end_date'] ?? '',
-            $data['guide_user_id'] ?? null,
-            $data['driver_user_id'] ?? null,
-            $data['max_capacity'] ?? 20,
-            (int)$id
-        ]);
+        $driverId = $data['driver_user_id'] ?? null;
+        if (empty($driverId)) {
+            try {
+                $stmtD = $this->pdo->query("SELECT id FROM users WHERE role = 'driver' ORDER BY id ASC LIMIT 1");
+                $rowD = $stmtD->fetch(PDO::FETCH_ASSOC);
+                if ($rowD) { $driverId = (int)$rowD['id']; }
+            } catch (PDOException $e) { /* ignore */ }
+            if (empty($driverId) && !empty($data['guide_user_id'])) {
+                $driverId = (int)$data['guide_user_id'];
+            }
+        }
+
+        try {
+            $query = "UPDATE tour_schedules SET tour_id = ?, start_date = ?, end_date = ?, guide_user_id = ?, 
+                      driver_user_id = ?, max_capacity = ? WHERE id = ?";
+            $stmt = $this->pdo->prepare($query);
+            return $stmt->execute([
+                $data['tour_id'] ?? null,
+                $data['start_date'] ?? '',
+                $data['end_date'] ?? '',
+                $data['guide_user_id'] ?? null,
+                $driverId ?? 0,
+                $data['max_capacity'] ?? 20,
+                (int)$id
+            ]);
+        } catch (PDOException $e) {
+            try {
+                $stmtU = $this->pdo->query("SELECT id FROM users ORDER BY id ASC LIMIT 1");
+                $rowU = $stmtU->fetch(PDO::FETCH_ASSOC);
+                $fallbackDriver = $rowU ? (int)$rowU['id'] : ($data['guide_user_id'] ?? null);
+                $stmt3 = $this->pdo->prepare("UPDATE tour_schedules SET tour_id = ?, start_date = ?, end_date = ?, guide_user_id = ?, driver_user_id = ?, max_capacity = ? WHERE id = ?");
+                return $stmt3->execute([
+                    $data['tour_id'] ?? null,
+                    $data['start_date'] ?? '',
+                    $data['end_date'] ?? '',
+                    $data['guide_user_id'] ?? null,
+                    $fallbackDriver ?? 0,
+                    $data['max_capacity'] ?? 20,
+                    (int)$id
+                ]);
+            } catch (PDOException $e2) {
+                return false;
+            }
+        }
     }
 
     public function delete($id) {

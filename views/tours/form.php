@@ -34,7 +34,7 @@ $detailEnds   = $old['it_item_end'] ?? array_map(fn($r) => !empty($r['end_time']
 $detailSlots  = $old['it_item_slot'] ?? array_column($itineraryItems ?? [], 'slot');
 $detailTitles = $old['it_item_title'] ?? array_column($itineraryItems ?? [], 'title');
 $detailNotes  = $old['it_item_details'] ?? array_column($itineraryItems ?? [], 'details');
-$detailMeals = $old['it_item_meal'] ?? array_column($itineraryItems ?? [], 'meal_plan');
+$detailLocations = $old['it_item_location'] ?? array_column($itineraryItems ?? [], 'location');
 $detailRows   = max(1, count($detailDays));
 
 $adultPrice = $old['adult_price'] ?? ($price['adult_price'] ?? 0);
@@ -324,8 +324,8 @@ $infantPrice = $old['infant_price'] ?? ($price['infant_price'] ?? 0);
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Địa điểm</label>
-                                    <input type="text" class="form-control" name="it_item_meal[]"
-                                        value="<?= htmlspecialchars($detailMeals[$i] ?? '') ?>"
+                                    <input type="text" class="form-control" name="it_item_location[]"
+                                        value="<?= htmlspecialchars($detailLocations[$i] ?? '') ?>"
                                         placeholder="Tên địa điểm tham quan">
                                 </div>
                             </div>
@@ -456,7 +456,7 @@ $infantPrice = $old['infant_price'] ?? ($price['infant_price'] ?? 0);
           </div>
           <div class="col-md-3">
             <label class="form-label">Địa điểm</label>
-            <input type="text" class="form-control" name="it_item_meal[]" value="" placeholder="Tên địa điểm tham quan">
+            <input type="text" class="form-control" name="it_item_location[]" value="" placeholder="Tên địa điểm tham quan">
           </div>
         </div>
       `;

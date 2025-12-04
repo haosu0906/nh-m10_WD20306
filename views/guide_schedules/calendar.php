@@ -176,7 +176,6 @@ require_once __DIR__ . '/../../assets/configs/env.php';
             <a class="nav-link" href="<?= BASE_URL ?>?r=guide_assignments"><i class="fas fa-user-check"></i> Phân công HDV</a>
             <a class="nav-link active" href="<?= BASE_URL ?>?r=guide_schedules"><i class="fas fa-calendar-alt"></i> Lịch HDV</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=guide_ratings"><i class="fas fa-star"></i> Đánh giá HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=guide_login">
                 <i class="fas fa-door-open"></i> Portal HDV
             </a>

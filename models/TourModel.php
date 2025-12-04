@@ -118,7 +118,7 @@ class TourModel extends BaseModel {
             $data['title'] ?? '',
             $data['description'] ?? '',
             $data['tour_type'] ?? 'domestic',
-            $this->normalizeStatus($data['status'] ?? 'upcoming'),
+            $data['status'] ?? 'upcoming',
         ];
 
         if ($hasSupplier)   { $cols[] = 'supplier_id'; $vals[] = !empty($data['supplier_id']) ? (int)$data['supplier_id'] : null; }
@@ -194,7 +194,7 @@ class TourModel extends BaseModel {
             'title' => $data['title'] ?? '',
             'description' => $data['description'] ?? '',
             'tour_type' => $data['tour_type'] ?? 'domestic',
-            'status' => $this->normalizeStatus($data['status'] ?? 'upcoming'),
+            'status' => $data['status'] ?? 'upcoming',
         ];
 
         $set = [
@@ -235,19 +235,6 @@ class TourModel extends BaseModel {
         $fields['id'] = (int)$id;
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute($fields);
-    }
-
-    protected function normalizeStatus($status)
-    {
-        $map = [
-            'upcoming' => 'upcoming',
-            'ongoing' => 'ongoing',
-            'finished' => 'finished',
-            'open' => 'upcoming',
-            'closed' => 'finished',
-        ];
-        $s = strtolower((string)$status);
-        return $map[$s] ?? 'upcoming';
     }
 
     public function delete($id) {

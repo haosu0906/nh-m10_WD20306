@@ -43,6 +43,16 @@ class ScheduleController {
         require __DIR__ . '/../views/schedules/calendar.php';
     }
 
+    public function show($id){
+        $id = (int)$id;
+        $schedule = $this->scheduleModel->find($id);
+        if (!$schedule) {
+            header('Location: ' . BASE_URL . '?r=schedules');
+            exit;
+        }
+        require __DIR__ . '/../views/schedules/show.php';
+    }
+
     public function create(){
         $tours = $this->tourModel->all();
         $guides = $this->userModel->getGuides();

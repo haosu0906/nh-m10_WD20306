@@ -342,6 +342,49 @@
             </div>
         </div>
 
+        <!-- 4.5. LỊCH SỬ TRẠNG THÁI -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-stream me-2"></i>Lịch sử Trạng thái</h5>
+            </div>
+            <div class="card-body">
+                <?php if (!empty($statusHistory)): ?>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Thời gian</th>
+                                <th>Trạng thái cũ</th>
+                                <th>Trạng thái mới</th>
+                                <th>Người thay đổi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <?php 
+                            $viStatus = [
+                                'pending' => 'Chờ xác nhận',
+                                'deposit' => 'Đã cọc',
+                                'completed' => 'Hoàn tất',
+                                'canceled' => 'Hủy'
+                            ];
+                            foreach ($statusHistory as $st): 
+                        ?>
+                            <tr>
+                                <td><?= !empty($st['changed_at']) ? date('d/m/Y H:i', strtotime($st['changed_at'])) : 'N/A' ?></td>
+                                <td><?= htmlspecialchars($viStatus[$st['old_status'] ?? ''] ?? ($st['old_status'] ?? '')) ?></td>
+                                <td><?= htmlspecialchars($viStatus[$st['new_status'] ?? ''] ?? ($st['new_status'] ?? '')) ?></td>
+                                <td><?= htmlspecialchars(($st['changed_by_name'] ?? '') ?: ($st['changed_by'] ?? '')) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php else: ?>
+                <p class="text-muted mb-0">Chưa có lịch sử trạng thái</p>
+                <?php endif; ?>
+            </div>
+        </div>
+
         <!-- 5. YÊU CẦU ĐẶC BIỆT & GHI CHÚ -->
         <div class="card mb-4">
             <div class="card-header">

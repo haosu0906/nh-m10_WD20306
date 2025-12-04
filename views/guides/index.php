@@ -70,7 +70,7 @@
 
     .guides-grid-header {
         display: grid;
-        grid-template-columns: 40px 220px 160px 140px 100px 150px 120px;
+        grid-template-columns: 40px minmax(240px, 2fr) 160px 140px 110px minmax(160px, 1.5fr) 120px;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         font-weight: 600;
@@ -98,8 +98,11 @@
 
     .guides-grid-row {
         display: grid;
-        grid-template-columns: 40px 220px 160px 140px 100px 150px 120px;
-        border-bottom: 1px solid #e5e7eb;
+        grid-template-columns: 40px minmax(240px, 2fr) 160px 140px 110px minmax(160px, 1.5fr) 120px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        margin-bottom: 6px;
+        background: #fff;
         transition: background-color 0.2s;
     }
 
@@ -108,12 +111,12 @@
     }
 
     .guides-grid-cell {
-        padding: 16px 12px;
+        padding: 18px 14px;
         border-right: 1px solid #e5e7eb;
         display: flex;
         align-items: center;
-        font-size: 0.875rem;
-        min-height: 80px;
+        font-size: 0.9rem;
+        min-height: 82px;
     }
 
     .guides-grid-cell:last-child {

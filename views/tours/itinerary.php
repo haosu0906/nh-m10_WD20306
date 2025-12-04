@@ -51,8 +51,8 @@
             <textarea class="form-control" rows="2" name="details" placeholder="Mô tả hoạt động, thời lượng, ghi chú..."></textarea>
           </div>
           <div class="col-md-2">
-            <label class="form-label">Địa điểm</label>
-            <input type="text" class="form-control" name="meal_plan" placeholder="Tên địa điểm tham quan">
+            <label class="form-label">Bữa ăn</label>
+            <input type="text" class="form-control" name="meal_plan" placeholder="Sáng/Trưa/Tối">
           </div>
           <div class="col-md-2 align-self-end">
             <button type="submit" class="btn btn-primary w-100">Thêm hoạt động</button>
@@ -68,10 +68,6 @@
         $d = (int)$it['day_number'];
         if(!isset($grouped[$d])) $grouped[$d] = [];
         $grouped[$d][] = $it;
-      }
-      $locs = [];
-      foreach (($itineraries ?? []) as $it) {
-        $locs[(int)($it['day_number'] ?? 0)] = $it['location'] ?? '';
       }
     ?>
 
@@ -101,9 +97,8 @@
                 </div>
               </div>
               <div class="text-muted mb-2"><?= htmlspecialchars($r['details'] ?? '') ?></div>
-              <?php $loc = trim($r['meal_plan'] ?? ''); if($loc===''){ $loc = $locs[(int)($r['day_number'] ?? 0)] ?? ''; } ?>
-              <?php if($loc !== ''): ?>
-                <div class="badge bg-light text-dark border mb-2">Địa điểm: <?= htmlspecialchars($loc) ?></div>
+              <?php if(!empty($r['meal_plan'])): ?>
+                <div class="badge bg-light text-dark border mb-2">Bữa: <?= htmlspecialchars($r['meal_plan']) ?></div>
               <?php endif; ?>
 
               <form method="post" action="<?= BASE_URL ?>?r=tours_itinerary_update" class="row g-2">
@@ -121,8 +116,8 @@
                 </div>
                 <div class="col-md-5"><input type="text" class="form-control form-control-sm" name="title" value="<?= htmlspecialchars($r['title'] ?? '') ?>"/></div>
                 <div class="col-12"><textarea name="details" rows="2" class="form-control form-control-sm"><?= htmlspecialchars($r['details'] ?? '') ?></textarea></div>
-                <div class="col-md-2"><input type="text" class="form-control form-control-sm" name="meal_plan" placeholder="Tên địa điểm" value="<?= htmlspecialchars(($r['meal_plan'] ?? '') !== '' ? $r['meal_plan'] : ($locs[(int)($r['day_number'] ?? 0)] ?? '')) ?>"/></div>
-                <div class="col-md-2"><button class="btn btn-sm btn-outline-primary w-100">Sửa</button></div>
+                <div class="col-md-2"><input type="text" class="form-control form-control-sm" name="meal_plan" value="<?= htmlspecialchars($r['meal_plan'] ?? '') ?>"/></div>
+                <div class="col-md-2"><button class="btn btn-sm btn-outline-primary w-100">Lưu</button></div>
               </form>
             </div>
           </div>

@@ -116,9 +116,8 @@ class TourController
         $tourId = (int)($post['tour_id'] ?? 0);
         if (!$itemId || !$tourId) { header('Location: ' . BASE_URL . '?r=tours'); exit; }
         try {
-            $pdo = $this->itineraryItemModel->getConnection();
-            $stmt = $pdo->prepare(
-                "UPDATE tour_itinerary_items SET day_number=?, activity_time=?, end_time=?, slot=?, title=?, details=?, meal_plan=? WHERE id=? AND tour_id=?"
+            $stmt = $this->itineraryItemModel->pdo->prepare(
+                "UPDATE {$this->itineraryItemModel->table_name} SET day_number=?, activity_time=?, end_time=?, slot=?, title=?, details=?, meal_plan=? WHERE id=? AND tour_id=?"
             );
             $stmt->execute([
                 (int)($post['day_number'] ?? 1),
@@ -131,7 +130,7 @@ class TourController
                 $itemId,
                 $tourId,
             ]);
-        } catch (Exception $e) { }
+        } catch (Exception $e) { /* ignore */ }
         header('Location: ' . BASE_URL . '?r=tours_itinerary&id=' . $tourId);
         exit;
     }
@@ -141,12 +140,11 @@ class TourController
         $itemId = (int)$id; $tourId = (int)$tourId;
         if (!$itemId || !$tourId) { header('Location: ' . BASE_URL . '?r=tours'); exit; }
         try {
-            $pdo = $this->itineraryItemModel->getConnection();
-            $stmt = $pdo->prepare(
-                "DELETE FROM tour_itinerary_items WHERE id=? AND tour_id=?"
+            $stmt = $this->itineraryItemModel->pdo->prepare(
+                "DELETE FROM {$this->itineraryItemModel->table_name} WHERE id=? AND tour_id=?"
             );
             $stmt->execute([$itemId, $tourId]);
-        } catch (Exception $e) { }
+        } catch (Exception $e) { /* ignore */ }
         header('Location: ' . BASE_URL . '?r=tours_itinerary&id=' . $tourId);
         exit;
     }

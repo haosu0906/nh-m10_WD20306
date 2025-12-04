@@ -93,7 +93,7 @@
 
     .ratings-grid-header {
         display: grid;
-        grid-template-columns: 150px 150px 120px 200px 150px 120px 100px;
+        grid-template-columns: minmax(240px, 2fr) minmax(240px, 2fr) 140px minmax(260px, 2fr) 160px 140px 120px;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         font-weight: 600;
@@ -121,8 +121,11 @@
 
     .ratings-grid-row {
         display: grid;
-        grid-template-columns: 150px 150px 120px 200px 150px 120px 100px;
-        border-bottom: 1px solid #e5e7eb;
+        grid-template-columns: minmax(240px, 2fr) minmax(240px, 2fr) 140px minmax(260px, 2fr) 160px 140px 120px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        margin-bottom: 6px;
+        background: #fff;
         transition: background-color 0.2s;
     }
 
@@ -131,12 +134,12 @@
     }
 
     .ratings-grid-cell {
-        padding: 16px 12px;
+        padding: 18px 14px;
         border-right: 1px solid #e5e7eb;
         display: flex;
         align-items: center;
-        font-size: 0.875rem;
-        min-height: 100px;
+        font-size: 0.9rem;
+        min-height: 92px;
     }
 
     .ratings-grid-cell:last-child {
@@ -328,7 +331,6 @@
             <a class="nav-link" href="<?= BASE_URL ?>?r=guide_assignments"><i class="fas fa-user-check"></i> Phân công HDV</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=guide_schedules"><i class="fas fa-calendar-alt"></i> Lịch HDV</a>
             <a class="nav-link active" href="<?= BASE_URL ?>?r=guide_ratings"><i class="fas fa-star"></i> Đánh giá HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=guide_login">
                 <i class="fas fa-door-open"></i> Portal HDV
             </a>

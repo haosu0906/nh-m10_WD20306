@@ -63,7 +63,7 @@
 
     .schedules-grid-header {
         display: grid;
-        grid-template-columns: 40px 200px 120px 120px 150px 120px 100px;
+        grid-template-columns: 40px minmax(260px, 2fr) 140px 140px minmax(180px, 1.5fr) 140px 120px;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         font-weight: 600;
@@ -91,8 +91,11 @@
 
     .schedules-grid-row {
         display: grid;
-        grid-template-columns: 40px 200px 120px 120px 150px 120px 100px;
-        border-bottom: 1px solid #e5e7eb;
+        grid-template-columns: 40px minmax(260px, 2fr) 140px 140px minmax(180px, 1.5fr) 140px 120px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        margin-bottom: 6px;
+        background: #fff;
         transition: background-color 0.2s;
     }
 
@@ -101,12 +104,12 @@
     }
 
     .schedules-grid-cell {
-        padding: 16px 12px;
+        padding: 18px 14px;
         border-right: 1px solid #e5e7eb;
         display: flex;
         align-items: center;
-        font-size: 0.875rem;
-        min-height: 80px;
+        font-size: 0.9rem;
+        min-height: 82px;
     }
 
     .schedules-grid-cell:last-child {
@@ -268,7 +271,6 @@
             <a class="nav-link" href="<?= BASE_URL ?>?r=suppliers"><i class="fas fa-handshake"></i> Nhà cung cấp</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
             <a class="nav-link active" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=guide_assignments"><i class="fas fa-user-check"></i> Phân công HDV</a>
             <a class="nav-link" href="<?= BASE_URL ?>?r=guide_schedules"><i class="fas fa-calendar-alt"></i> Lịch HDV</a>
