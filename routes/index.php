@@ -4,6 +4,7 @@ $route = $_GET['r'] ?? 'home';
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 require_once __DIR__ . '/../controllers/TourCategoryController.php';
+require_once __DIR__ . '/../controllers/AdminController.php';
 require_once __DIR__ . '/../controllers/TourController.php';
 require_once __DIR__ . '/../controllers/GuidesController.php';
 require_once __DIR__ . '/../controllers/AuthController.php';
@@ -17,8 +18,10 @@ require_once __DIR__ . '/../controllers/CancellationPolicyController.php';
 require_once __DIR__ . '/../controllers/GuideAssignmentController.php';
 require_once __DIR__ . '/../controllers/GuideScheduleController.php';
 require_once __DIR__ . '/../controllers/GuideRatingController.php';
+require_once __DIR__ . '/../controllers/QRCodeController.php';
 
 $catController = new TourCategoryController();
+$adminController = new AdminController();
 $tourController = new TourController();
 $guideController = new GuidesController();
 $authController = new AuthController();
@@ -31,6 +34,7 @@ $cancellationPolicyController = new CancellationPolicyController();
 $guideAssignmentController = new GuideAssignmentController();
 $guideScheduleController = new GuideScheduleController();
 $guideRatingController = new GuideRatingController();
+$qrController = new QRCodeController();
 $bookingController = new BookingController();
 
 switch ($route) {
@@ -191,10 +195,18 @@ switch ($route) {
         if ($method === 'POST') $bookingController->update(); break;
     case 'booking_cancel':
         $bookingController->cancel(); break;
+    case 'booking_guest_checkin':
+        $bookingController->guestCheckin(); break;
     case 'booking_send_email':
         $bookingController->sendEmail(); break;
     case 'booking_pdf':
         $bookingController->pdf(); break;
+    case 'qr':
+        $qrController->generate(); break;
+    case 'booking_assign_room':
+        if ($method === 'POST') $bookingController->assignRoom(); break;
+    case 'booking_unassign_room':
+        $bookingController->unassignRoom(); break;
     case 'booking_delete':
         $bookingController->delete($_GET['id'] ?? 0); break;
 
@@ -280,7 +292,14 @@ switch ($route) {
     case 'guide_rating_customer_form':
         $guideRatingController->customerRatingForm(); break;
 
+    case 'admin_dashboard':
+        $adminController->dashboard(); break;
     case 'home':
+        try { $adminController->dashboard(); }
+        catch (Throwable $e) { require __DIR__ . '/../views/main.php'; }
+        break;
     default:
-        require __DIR__ . '/../views/main.php'; break;
+        try { $adminController->dashboard(); }
+        catch (Throwable $e) { require __DIR__ . '/../views/main.php'; }
+        break;
 }

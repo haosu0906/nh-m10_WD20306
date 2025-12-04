@@ -55,15 +55,14 @@ class BookingModel extends BaseModel {
     }
 
     public function update($id, $data) {
-        $query = "UPDATE bookings SET tour_id = ?, user_id = ?, number_of_guests = ?, 
-                  total_amount = ?, status = ?, special_requests = ? WHERE id = ?";
+        $query = "UPDATE bookings SET tour_id = ?, total_guests = ?, total_price = ?, 
+                  booking_status = ?, special_requests = ? WHERE id = ?";
         $stmt = $this->pdo->prepare($query);
         return $stmt->execute([
             $data['tour_id'] ?? null,
-            $data['user_id'] ?? null,
-            $data['number_of_guests'] ?? 1,
-            $data['total_amount'] ?? 0,
-            $data['status'] ?? 'pending',
+            $data['number_of_guests'] ?? ($data['total_guests'] ?? 1),
+            $data['total_amount'] ?? ($data['total_price'] ?? 0),
+            $data['status'] ?? ($data['booking_status'] ?? 'pending'),
             $data['special_requests'] ?? '',
             (int)$id
         ]);
@@ -90,7 +89,7 @@ class BookingModel extends BaseModel {
             if ($ok && $old !== null && $old !== $status) {
                 try {
                     $changedBy = $_SESSION['user_id'] ?? null;
-                    $stmt2 = $this->pdo->prepare("INSERT INTO booking_status_logs (booking_id, old_status, new_status, changed_by, changed_at) VALUES (?, ?, ?, ?, NOW())");
+                    $stmt2 = $this->pdo->prepare("INSERT INTO booking_status_logs (booking_id, old_status, new_status, changed_by_user_id, changed_at) VALUES (?, ?, ?, ?, NOW())");
                     $stmt2->execute([$id, $old, $status, $changedBy]);
                 } catch (Exception $e) {
                     // ignore if log table missing
@@ -100,6 +99,17 @@ class BookingModel extends BaseModel {
         } catch (Exception $e) {
             return false;
         }
+    }
+
+    // Tổng số chỗ đã được đặt theo schedule
+    public function getOccupiedSeatsBySchedule($schedule_id) {
+        $sql = "SELECT COALESCE(SUM(total_guests), 0) AS occupied
+                FROM bookings
+                WHERE schedule_id = ? AND booking_status != 'canceled'";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([(int)$schedule_id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)($row['occupied'] ?? 0);
     }
 
     // Lấy booking theo user
@@ -128,7 +138,7 @@ class BookingModel extends BaseModel {
         try {
             $query = "SELECT l.*, u.full_name AS changed_by_name
                       FROM booking_status_logs l
-                      LEFT JOIN users u ON l.changed_by = u.id
+                      LEFT JOIN users u ON l.changed_by_user_id = u.id
                       WHERE l.booking_id = ?
                       ORDER BY l.id DESC
                       LIMIT 20";
@@ -216,6 +226,53 @@ class BookingModel extends BaseModel {
         } catch (Exception $e2) {}
 
         return [];
+    }
+
+    // Rooms & assignments
+    public function getAvailableRooms() {
+        try {
+            $sql = "SELECT r.id, r.room_number, r.status, h.name AS hotel_name, rt.name AS room_type
+                    FROM rooms r
+                    LEFT JOIN hotels h ON r.hotel_id = h.id
+                    LEFT JOIN room_types rt ON r.room_type_id = rt.id
+                    WHERE r.status = 'available'
+                    ORDER BY h.name, r.room_number";
+            $stmt = $this->pdo->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) { return []; }
+    }
+
+    public function isRoomAvailable($room_id, $start_date, $end_date) {
+        if (empty($start_date) || empty($end_date)) return true; // cannot validate without dates
+        try {
+            $sql = "SELECT COUNT(*) FROM room_assignments ra
+                    WHERE ra.room_id = ?
+                      AND ra.status IN ('reserved','checked_in')
+                      AND ra.check_in_date <= ?
+                      AND ra.check_out_date >= ?";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([(int)$room_id, $end_date, $start_date]);
+            $conflicts = (int)$stmt->fetchColumn();
+            return $conflicts === 0;
+        } catch (Exception $e) { return true; }
+    }
+
+    public function getRoomAssignmentsByBooking($booking_id) {
+        try {
+            $sql = "SELECT ra.id, ra.room_id, ra.guest_id, ra.check_in_date, ra.check_out_date, ra.status,
+                           r.room_number, h.name AS hotel_name, rt.name AS room_type,
+                           bg.full_name AS guest_name
+                    FROM room_assignments ra
+                    LEFT JOIN rooms r ON ra.room_id = r.id
+                    LEFT JOIN hotels h ON r.hotel_id = h.id
+                    LEFT JOIN room_types rt ON r.room_type_id = rt.id
+                    LEFT JOIN booking_guests bg ON ra.guest_id = bg.id
+                    WHERE ra.booking_id = ?
+                    ORDER BY ra.id DESC";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([(int)$booking_id]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) { return []; }
     }
 }
 ?>

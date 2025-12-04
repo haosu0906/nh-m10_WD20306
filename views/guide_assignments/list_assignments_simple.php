@@ -7,7 +7,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container mt-4">
+    <?php require_once __DIR__ . '/../../assets/configs/env.php'; ?>
+    <?php $current_page='guide_assignments'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
+    <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
+    <main class="main" style="margin-left:200px;padding:86px 22px 22px">
         <h2>Phân công Hướng dẫn viên</h2>
         
         <div class="mb-3">
@@ -60,6 +63,6 @@
                 <?php endif; ?>
             </tbody>
         </table>
-    </div>
+    </main>
 </body>
 </html>

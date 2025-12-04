@@ -55,7 +55,7 @@ require_once __DIR__ . '/../../assets/configs/env.php';
 
     .main {
         margin-left: 200px;
-        padding: 22px;
+        padding: 86px 22px 22px;
     }
 
     .progress {
@@ -119,6 +119,7 @@ require_once __DIR__ . '/../../assets/configs/env.php';
         </nav>
     </div>
 
+    <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
     <main class="main">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>

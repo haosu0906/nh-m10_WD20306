@@ -26,17 +26,7 @@
         color: #222;
     }
 
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 200px;
-        padding: 20px;
-        background: linear-gradient(180deg, var(--accent), #764ba2);
-        color: #fff;
-        overflow: auto;
-    }
+    /* Sidebar styles are provided by modern-ui.css */
 
     .sidebar h3 {
         font-weight: 700;
@@ -60,10 +50,7 @@
         background: rgba(255, 255, 255, .1);
     }
 
-    .main {
-        margin-left: 200px;
-        padding: 22px;
-    }
+    .main-content {}
 
     /* CSS Grid Layout for Suppliers Table */
     .suppliers-grid-container {
@@ -76,8 +63,9 @@
     .suppliers-grid-header {
         display: grid;
         grid-template-columns: 40px minmax(240px, 2fr) 200px 140px minmax(200px, 1.5fr) 120px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        background: #fff;
+        color: #0f172a;
+        border-bottom: 1px solid #e5e7eb;
         font-weight: 600;
         font-size: 0.875rem;
         text-transform: uppercase;
@@ -270,31 +258,11 @@
     }
     </style>
 </head>
-
 <body>
-    <div class="sidebar">
-        <h3><i class="fas fa-map-marked-alt"></i> Quản trị Tripmate</h3>
-        <nav class="nav flex-column">
-            <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=tour_categories"><i class="fas fa-layer-group"></i> Danh mục tour</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
-            <a class="nav-link active" href="<?= BASE_URL ?>?r=suppliers"><i class="fas fa-handshake"></i> Nhà cung cấp</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_assignments"><i class="fas fa-user-check"></i> Phân công HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_schedules"><i class="fas fa-calendar-alt"></i> Lịch HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_ratings"><i class="fas fa-star"></i> Đánh giá HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_login">
-                <i class="fas fa-door-open"></i> Portal HDV
-            </a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=admin_login">
-                <i class="fas fa-user-shield"></i> Đăng nhập Admin
-            </a>
-        </nav>
-    </div>
-
-    <main class="main">
+    <?php require_once __DIR__ . '/../../assets/configs/env.php'; ?>
+    <?php $current_page='suppliers'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
+    <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
+    <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-4 fade-in">
             <div>
                 <h1 class="mb-2">🤝 Nhà Cung Cấp Dịch Vụ</h1>
@@ -442,7 +410,7 @@
             </div>
         </div>
         <?php endif; ?>
-    </main>
+    </div>
 </body>
 
 </html>

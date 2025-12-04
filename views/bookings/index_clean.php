@@ -39,7 +39,7 @@
         }
         .main-content {
             margin-left: 200px;
-            padding: 20px;
+            padding: 86px 20px 20px;
         }
     </style>
 </head>
@@ -60,7 +60,7 @@
         </nav>
     </div>
 
-    <!-- Main Content -->
+    <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
     <div class="main-content">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-4">

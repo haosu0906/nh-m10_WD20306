@@ -48,13 +48,15 @@
 
     .main {
         margin-left: 200px;
-        padding: 22px
+        padding: 86px 22px 22px
     }
     </style>
 </head>
 
 <body>
-    <div class="sidebar">
+    <?php require_once __DIR__ . '/../../assets/configs/env.php'; ?>
+    <?php $current_page='guide_assignments'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
+    <div class="sidebar-old" style="display:none">
         <h3><i class="fas fa-map-marked-alt"></i> Quản trị Tripmate</h3>
         <nav class="nav flex-column">
             <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
@@ -79,9 +81,10 @@
         </nav>
     </div>
 
-    <main class="main">
+    
+    <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3>Sửa Phân công HDV</h3>
+            <h3 class="mb-0">Sửa Phân công HDV</h3>
             <a href="<?= BASE_URL ?>?r=guide_assignments" class="btn btn-outline-secondary">Quay lại</a>
         </div>
 
@@ -100,12 +103,13 @@
         <?php endif; ?>
 
         <form method="post" action="<?= BASE_URL ?>?r=guide_assignments_update&id=<?= $assignment['id'] ?>">
-            <div class="card">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light fw-bold">Thông tin phân công</div>
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Tour <span class="text-danger">*</span></label>
-                            <select name="tour_id" class="form-select" required>
+                            <label class="form-label fw-bold">Tour <span class="text-danger">*</span></label>
+                            <select name="tour_id" class="form-select form-select-lg" required>
                                 <option value="">-- Chọn tour --</option>
                                 <?php foreach ($tours as $t): ?>
                                 <option value="<?= $t['id'] ?>" <?= (int)$t['id'] === (int)$assignment['tour_id'] ? 'selected' : '' ?>>
@@ -115,8 +119,8 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Hướng dẫn viên <span class="text-danger">*</span></label>
-                            <select name="guide_id" class="form-select" required>
+                            <label class="form-label fw-bold">Hướng dẫn viên <span class="text-danger">*</span></label>
+                            <select name="guide_id" class="form-select form-select-lg" required>
                                 <option value="">-- Chọn hướng dẫn viên --</option>
                                 <?php foreach ($guides as $g): ?>
                                 <option value="<?= $g['id'] ?>" <?= (int)$g['id'] === (int)$assignment['guide_user_id'] ? 'selected' : '' ?>>
@@ -126,16 +130,16 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Loại phân công</label>
-                            <select name="assignment_type" class="form-select">
+                            <label class="form-label fw-bold">Loại phân công</label>
+                            <select name="assignment_type" class="form-select form-select-lg">
                                 <option value="main_guide" <?= $assignment['assignment_type'] === 'main_guide' ? 'selected' : '' ?>>HDV Chính</option>
                                 <option value="assistant_guide" <?= $assignment['assignment_type'] === 'assistant_guide' ? 'selected' : '' ?>>HDV Phụ</option>
                                 <option value="tour_leader" <?= $assignment['assignment_type'] === 'tour_leader' ? 'selected' : '' ?>>Trưởng đoàn</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Ngày phân công</label>
-                            <input type="date" name="assignment_date" class="form-control" value="<?= htmlspecialchars($assignment['assignment_date'] ?? date('Y-m-d')) ?>" required>
+                            <label class="form-label fw-bold">Ngày phân công</label>
+                            <input type="date" name="assignment_date" class="form-control form-control-lg" value="<?= htmlspecialchars($assignment['assignment_date'] ?? date('Y-m-d')) ?>" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Trạng thái</label>
@@ -147,16 +151,16 @@
                             </select>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Ghi chú</label>
-                            <textarea name="notes" rows="3" class="form-control" placeholder="Ghi chú về phân công này..."><?= htmlspecialchars($assignment['notes'] ?? '') ?></textarea>
+                            <label class="form-label fw-bold">Ghi chú</label>
+                            <textarea name="notes" rows="3" class="form-control form-control-lg" placeholder="Ghi chú về phân công này..."><?= htmlspecialchars($assignment['notes'] ?? '') ?></textarea>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary btn-lg">
                         <i class="fas fa-save"></i> Cập nhật
                     </button>
-                    <a href="<?= BASE_URL ?>?r=guide_assignments" class="btn btn-outline-secondary">
+                    <a href="<?= BASE_URL ?>?r=guide_assignments" class="btn btn-outline-secondary btn-lg">
                         <i class="fas fa-times"></i> Hủy
                     </a>
                 </div>
@@ -180,7 +184,7 @@
                 </div>
             </div>
         </div>
-    </main>
+    </div>
 </body>
 
 </html>

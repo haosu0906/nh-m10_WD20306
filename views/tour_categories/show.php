@@ -7,9 +7,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <link href="<?= BASE_URL ?>assets/css/modern-ui.css" rel="stylesheet" />
     <style>
-    .page-wrapper { display:flex; min-height:100vh; }
-    .sidebar { position: static; width:250px; min-width:250px; flex:0 0 250px; height:auto; }
-    .main { margin-left:0; flex:1; padding:22px; }
     .card { border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.05); }
     .value { font-weight:600; color:#1f2937; }
     .muted { color:#6b7280; }
@@ -17,9 +14,9 @@
     <?php require_once __DIR__ . '/../../assets/configs/env.php'; ?>
 </head>
 <body>
-    <div class="page-wrapper">
         <?php $current_page='tour_categories'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
-        <main class="main">
+        <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
+        <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h3 class="mb-0">Chi tiết Danh mục</h3>
             <div class="d-flex gap-2">
@@ -58,7 +55,6 @@
                 </div>
             </div>
         </div>
-        </main>
-    </div>
+        </div>
 </body>
 </html>

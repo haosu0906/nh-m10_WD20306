@@ -19,7 +19,10 @@
     </style>
 </head>
 <body>
-    <div class="container mt-4">
+    <?php require_once __DIR__ . '/../../assets/configs/env.php'; ?>
+    <?php $current_page='staff'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
+    <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
+    <main class="main" style="margin-left:200px;padding:86px 22px 22px">
         <h2>Quản lý Nhân Sự</h2>
         
         <div class="mb-3">
@@ -78,6 +81,6 @@
                 <?php endif; ?>
             </tbody>
         </table>
-    </div>
+    </main>
 </body>
 </html>

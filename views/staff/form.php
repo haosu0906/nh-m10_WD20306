@@ -55,7 +55,7 @@ $title = $editing ? 'Sửa Hướng Dẫn Viên' : 'Thêm Hướng Dẫn Viên';
 
     .main {
         margin-left: 200px;
-        padding: 22px
+        padding: 86px 22px 22px
     }
     </style>
 </head>
@@ -83,7 +83,7 @@ $title = $editing ? 'Sửa Hướng Dẫn Viên' : 'Thêm Hướng Dẫn Viên';
             </a>
         </nav>
     </div>
-
+    <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
     <main class="main">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3><?= $title ?></h3>

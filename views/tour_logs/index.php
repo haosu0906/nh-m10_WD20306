@@ -7,7 +7,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
 </head>
 <body>
-<div class="container py-4">
+<?php require_once __DIR__ . '/../../assets/configs/env.php'; ?>
+<?php $current_page='tour_logs'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
+<?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
+<main class="main" style="margin-left:200px;padding:86px 22px 22px">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="mb-0">Nhật ký tour</h3>
         <a class="btn btn-primary" href="<?= BASE_URL ?>?r=tour_logs_create">
@@ -53,6 +56,6 @@
             </tbody>
         </table>
     <?php endif; ?>
-</div>
+</main>
 </body>
 </html>

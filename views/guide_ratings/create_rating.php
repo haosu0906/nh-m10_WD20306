@@ -6,23 +6,14 @@
     <title>Thêm Đánh giá HDV</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="<?= BASE_URL ?>assets/css/modern-ui.css" rel="stylesheet" />
     <style>
     :root {
         --accent: #667eea;
         --accent-dark: #5568d3
     }
 
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 200px;
-        padding: 20px;
-        background: linear-gradient(180deg, var(--accent), #764ba2);
-        color: #fff;
-        overflow: auto
-    }
+    
 
     .sidebar h3 {
         font-weight: 700;
@@ -46,10 +37,7 @@
         background: rgba(255, 255, 255, .1)
     }
 
-    .main {
-        margin-left: 200px;
-        padding: 22px
-    }
+    .main-content {}
 
     .rating-stars {
         display: flex;
@@ -98,32 +86,11 @@
 </head>
 
 <body>
-    <div class="sidebar">
-        <h3><i class="fas fa-map-marked-alt"></i> Quản trị Tripmate</h3>
-        <nav class="nav flex-column">
-            <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=tour_categories"><i class="fas fa-layer-group"></i> Danh mục tour</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=suppliers"><i class="fas fa-handshake"></i> Nhà cung cấp</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=payments"><i class="fas fa-credit-card"></i> Thanh toán</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=cancellation_policies"><i class="fas fa-ban"></i> Chính sách hủy</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_assignments"><i class="fas fa-user-check"></i> Phân công HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_schedules"><i class="fas fa-calendar-alt"></i> Lịch HDV</a>
-            <a class="nav-link active" href="<?= BASE_URL ?>?r=guide_ratings"><i class="fas fa-star"></i> Đánh giá HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_login">
-                <i class="fas fa-door-open"></i> Portal HDV
-            </a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=admin_login">
-                <i class="fas fa-user-shield"></i> Đăng nhập Admin
-            </a>
-        </nav>
-    </div>
+    <?php require_once __DIR__ . '/../../assets/configs/env.php'; ?>
+    <?php $current_page='guide_ratings'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
+    <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
 
-    <main class="main">
+    <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h3>Thêm Đánh giá HDV</h3>
             <a href="<?= BASE_URL ?>?r=guide_ratings" class="btn btn-outline-secondary">Quay lại</a>
@@ -167,12 +134,13 @@
             <input type="hidden" name="rater_type" value="<?= $_GET['rater_type'] ?? 'staff' ?>">
             <input type="hidden" name="rater_id" value="1">
 
-            <div class="card">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light fw-bold">Thông tin đánh giá</div>
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Hướng dẫn viên</label>
-                            <select name="guide_id" class="form-select" required>
+                            <label class="form-label fw-bold">Hướng dẫn viên</label>
+                            <select name="guide_id" class="form-select form-select-lg" required>
                                 <option value="">-- Chọn hướng dẫn viên --</option>
                                 <?php if ($guide): ?>
                                 <option value="<?= $guide['id'] ?>" selected>
@@ -182,8 +150,8 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Loại người đánh giá</label>
-                            <select name="rater_type" class="form-select" required>
+                            <label class="form-label fw-bold">Loại người đánh giá</label>
+                            <select name="rater_type" class="form-select form-select-lg" required>
                                 <option value="customer" <?= (($_GET['rater_type'] ?? '') === 'customer') ? 'selected' : '' ?>>Khách hàng</option>
                                 <option value="staff" <?= (($_GET['rater_type'] ?? '') === 'staff' ? 'selected' : '') ?>>Nhân viên</option>
                                 <option value="admin" <?= (($_GET['rater_type'] ?? '') === 'admin' ? 'selected' : '') ?>>Admin</option>
@@ -194,8 +162,8 @@
             </div>
 
             <!-- Rating Sections -->
-            <div class="card mt-3">
-                <div class="card-header">
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-light fw-bold">
                     <h6 class="mb-0"><i class="fas fa-star"></i> Đánh giá chi tiết</h6>
                 </div>
                 <div class="card-body">
@@ -218,38 +186,38 @@
             </div>
 
             <!-- Comments -->
-            <div class="card mt-3">
-                <div class="card-header">
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-light fw-bold">
                     <h6 class="mb-0"><i class="fas fa-comment"></i> Nhận xét</h6>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="form-label">Nhận xét chi tiết</label>
-                            <textarea name="comment" rows="4" class="form-control" placeholder="Hãy chia sẻ trải nghiệm của bạn với HDV..." required></textarea>
+                            <label class="form-label fw-bold">Nhận xét chi tiết</label>
+                            <textarea name="comment" rows="4" class="form-control form-control-lg" placeholder="Hãy chia sẻ trải nghiệm của bạn với HDV..." required></textarea>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Điểm mạnh</label>
-                            <textarea name="pros" rows="3" class="form-control" placeholder="Những điểm bạn thấy HDV làm tốt..."></textarea>
+                            <label class="form-label fw-bold">Điểm mạnh</label>
+                            <textarea name="pros" rows="3" class="form-control form-control-lg" placeholder="Những điểm bạn thấy HDV làm tốt..."></textarea>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Điểm cần cải thiện</label>
-                            <textarea name="cons" rows="3" class="form-control" placeholder="Những điểm HDV có thể cải thiện..."></textarea>
+                            <label class="form-label fw-bold">Điểm cần cải thiện</label>
+                            <textarea name="cons" rows="3" class="form-control form-control-lg" placeholder="Những điểm HDV có thể cải thiện..."></textarea>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card-footer">
-                <button type="submit" class="btn btn-primary">
+            <div class="card-footer text-end">
+                <button type="submit" class="btn btn-primary btn-lg">
                     <i class="fas fa-paper-plane"></i> Gửi đánh giá
                 </button>
-                <a href="<?= BASE_URL ?>?r=guide_ratings" class="btn btn-outline-secondary">
+                <a href="<?= BASE_URL ?>?r=guide_ratings" class="btn btn-outline-secondary btn-lg">
                     <i class="fas fa-times"></i> Hủy
                 </a>
             </div>
         </form>
-    </main>
+    </div>
 
     <script>
     // Rating stars interaction

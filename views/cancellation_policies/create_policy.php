@@ -19,17 +19,7 @@ require_once __DIR__ . '/../../assets/configs/env.php';
         background: #f8f9fa;
     }
 
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 200px;
-        padding: 20px;
-        background: linear-gradient(180deg, var(--accent), #764ba2);
-        color: #fff;
-        overflow: auto;
-    }
+    .sidebar {}
 
     .sidebar h3 {
         font-weight: 700;
@@ -61,7 +51,9 @@ require_once __DIR__ . '/../../assets/configs/env.php';
 </head>
 
 <body>
-    <div class="sidebar">
+    <?php $current_page='cancellation_policies'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
+    <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
+    <div class="sidebar-old" style="display:none">
         <h3><i class="fas fa-map-marked-alt"></i> Quản trị Tripmate</h3>
         <nav class="nav flex-column">
             <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>

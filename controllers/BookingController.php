@@ -77,10 +77,18 @@ class BookingController {
             exit;
         }
 
-        // Check capacity
+        // Check capacity theo schedule (tổng đã đặt và chỗ còn lại)
         $schedule = $scheduleModel->find($schedule_id);
-        if (!$schedule || (int)$schedule['max_capacity'] < $total_guests) {
-            flash_set('error', 'Số lượng khách vượt quá số chỗ còn lại của tour.');
+        if (!$schedule) {
+            flash_set('error', 'Không tìm thấy lịch khởi hành để tạo booking.');
+            header('Location: ' . BASE_URL . '?r=booking_create');
+            exit;
+        }
+        $maxCap = (int)($schedule['max_capacity'] ?? 0);
+        $occupied = $this->bookingModel->getOccupiedSeatsBySchedule($schedule_id);
+        $available = $maxCap - $occupied;
+        if ($available < $total_guests) {
+            flash_set('error', 'Không đủ chỗ trống. Còn lại: ' . max(0, $available) . ' chỗ.');
             header('Location: ' . BASE_URL . '?r=booking_create');
             exit;
         }
@@ -162,6 +170,14 @@ class BookingController {
         $total_paid = $this->bookingModel->getTotalPaid($id);
         $payment_history = $this->bookingModel->getPaymentHistory($id);
         $suppliers = $this->bookingModel->getTourSuppliers($item['tour_id'] ?? 0);
+        $roomAssignments = $this->bookingModel->getRoomAssignmentsByBooking($id);
+        $availableRooms = $this->bookingModel->getAvailableRooms();
+        $assignmentsByGuest = [];
+        foreach ($roomAssignments as $ra) {
+            if (!empty($ra['guest_id'])) {
+                $assignmentsByGuest[(int)$ra['guest_id']] = $ra;
+            }
+        }
         
         require 'views/booking/detail_booking.php';
     }
@@ -186,71 +202,66 @@ class BookingController {
         $scheduleModel = new ScheduleModel();
         $schedules = $scheduleModel->all();
 
-
+        // Đồng nhất biến cho view
+        $item = $booking;
         require 'views/booking/edit_booking.php';
     }
 
-    public function cancel() {
-        $id = (int)($_GET['id'] ?? 0);
+    public function update() {
+        $id = (int)($_POST['id'] ?? 0);
         if ($id <= 0) {
-            flash_set('error', 'ID booking không hợp lệ.');
+            flash_set('error', 'ID không hợp lệ.');
             header('Location: ' . BASE_URL . '?r=booking');
             exit;
         }
-
-        $item = $this->bookingModel->find($id);
-        if (!$item) {
-            flash_set('error', 'Không tìm thấy booking để hủy.');
-            header('Location: ' . BASE_URL . '?r=booking');
-            exit;
-        }
-
-        $updated = $this->bookingModel->updateStatus($id, 'canceled');
-        if ($updated) {
-            flash_set('success', 'Đã hủy booking.');
-        } else {
-            flash_set('error', 'Không thể hủy booking.');
-        }
-
-        header('Location: ' . BASE_URL . '?r=booking');
+        $ok = $this->bookingModel->update($id, $_POST);
+        flash_set($ok ? 'success' : 'error', $ok ? 'Đã cập nhật booking.' : 'Không thể cập nhật booking.');
+        header('Location: ' . BASE_URL . '?r=booking_detail&id=' . $id);
         exit;
     }
 
-    public function delete($id = 0) {
-        $id = (int)$id;
-        if ($id <= 0) {
-            flash_set('error', 'ID booking không hợp lệ.');
-            header('Location: ' . BASE_URL . '?r=booking');
+    public function guestCheckin() {
+        $booking_id = (int)($_POST['booking_id'] ?? $_GET['booking_id'] ?? 0);
+        $guest_id = (int)($_POST['guest_id'] ?? $_GET['guest_id'] ?? 0);
+        $checked = isset($_POST['checked']) ? (int)$_POST['checked'] : (isset($_GET['checked']) ? (int)$_GET['checked'] : 0);
+        if ($booking_id <= 0 || $guest_id <= 0) {
+            flash_set('error', 'Thiếu thông tin khách/booking.');
+            header('Location: ' . BASE_URL . '?r=booking_detail&id=' . $booking_id);
             exit;
         }
-
-        $pdo = $this->bookingModel->getConnection();
-        $this->bookingModel->beginTransaction();
-        try {
-            $stmt = $pdo->prepare("DELETE FROM payments WHERE booking_id = ?");
-            $stmt->execute([$id]);
-
-            $stmt2 = $pdo->prepare("DELETE FROM booking_guests WHERE booking_id = ?");
-            $stmt2->execute([$id]);
-
-            try {
-                $stmt3 = $pdo->prepare("DELETE FROM booking_status_logs WHERE booking_id = ?");
-                $stmt3->execute([$id]);
-            } catch (Exception $e) {
-                // Bảng log có thể không tồn tại
-            }
-
-            $this->bookingModel->delete($id);
-
-            $this->bookingModel->commit();
-            flash_set('success', 'Đã xóa booking thành công.');
-        } catch (Exception $e) {
-            $this->bookingModel->rollBack();
-            flash_set('error', 'Không thể xóa booking: ' . $e->getMessage());
-        }
-
-        header('Location: ' . BASE_URL . '?r=booking');
+        $gm = new BookingGuestsModel();
+        $ok = $gm->setCheckin($guest_id, $checked);
+        // Ghi log nâng cao nếu có dữ liệu
+        $stage = $_POST['stage'] ?? $_GET['stage'] ?? null; // gather | bus
+        $location = $_POST['location'] ?? $_GET['location'] ?? null;
+        $gm->addCheckinLog($booking_id, $guest_id, $stage, $location);
+        flash_set($ok ? 'success' : 'error', $ok ? 'Đã cập nhật check-in.' : 'Không thể cập nhật check-in.');
+        header('Location: ' . BASE_URL . '?r=booking_detail&id=' . $booking_id);
         exit;
+    }
+
+    public function pdf() {
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id <= 0) {
+            echo 'Invalid booking';
+            exit;
+        }
+        $item = $this->bookingModel->find($id);
+        if (!$item) {
+            echo 'Booking not found';
+            exit;
+        }
+        $customer = $this->bookingModel->getCustomerInfo($item['customer_user_id'] ?? 0);
+        $guests = $this->bookingModel->getBookingGuests($id);
+        $suppliers = $this->bookingModel->getTourSuppliers($item['tour_id'] ?? 0);
+        // Bổ sung tên tour cho view
+        try {
+            $tour = $this->tourModel->find($item['tour_id'] ?? 0);
+            if ($tour && !empty($tour['title'])) {
+                $item['tour_name'] = $tour['title'];
+            }
+        } catch (Exception $e) {}
+        require __DIR__ . '/../views/booking/booking_pdf.php';
     }
 
     public function updateStatus() {
@@ -270,6 +281,117 @@ class BookingController {
         
         flash_set('success', 'Cập nhật trạng thái booking thành công.');
         header('Location: ' . $_SERVER['HTTP_REFERER']);
+        exit;
+    }
+
+    public function cancel() {
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id <= 0) {
+            flash_set('error', 'ID booking không hợp lệ.');
+            header('Location: ' . BASE_URL . '?r=booking');
+            exit;
+        }
+        $item = $this->bookingModel->find($id);
+        if (!$item) {
+            flash_set('error', 'Không tìm thấy booking để hủy.');
+            header('Location: ' . BASE_URL . '?r=booking');
+            exit;
+        }
+        $ok = $this->bookingModel->updateStatus($id, 'canceled');
+        flash_set($ok ? 'success' : 'error', $ok ? 'Đã hủy booking.' : 'Không thể hủy booking.');
+        header('Location: ' . BASE_URL . '?r=booking');
+        exit;
+    }
+
+    public function delete($id) {
+        $id = (int)$id;
+        if ($id <= 0) {
+            flash_set('error', 'ID không hợp lệ.');
+            header('Location: ' . BASE_URL . '?r=booking');
+            exit;
+        }
+        try {
+            require_once __DIR__ . '/../assets/configs/db.php';
+            $pdo = DB::get();
+            $this->bookingModel->beginTransaction();
+            // delete dependencies
+            $pdo->prepare("DELETE FROM payments WHERE booking_id = ?")->execute([$id]);
+            $pdo->prepare("DELETE FROM booking_guests WHERE booking_id = ?")->execute([$id]);
+            try { $pdo->prepare("DELETE FROM booking_status_logs WHERE booking_id = ?")->execute([$id]); } catch (Exception $e) {}
+            $this->bookingModel->delete($id);
+            $this->bookingModel->commit();
+            flash_set('success', 'Đã xóa booking thành công.');
+        } catch (Exception $e) {
+            $this->bookingModel->rollBack();
+            flash_set('error', 'Không thể xóa booking: ' . $e->getMessage());
+        }
+        header('Location: ' . BASE_URL . '?r=booking');
+        exit;
+    }
+
+    public function assignRoom() {
+        $booking_id = (int)($_POST['booking_id'] ?? 0);
+        $room_id = (int)($_POST['room_id'] ?? 0);
+        $guest_id = (int)($_POST['guest_id'] ?? 0);
+        $check_in_date = $_POST['check_in_date'] ?? null;
+        $check_out_date = $_POST['check_out_date'] ?? null;
+        if ($booking_id <= 0 || $room_id <= 0) {
+            flash_set('error', 'Thiếu thông tin phân phòng.');
+            header('Location: ' . BASE_URL . '?r=booking_detail&id=' . $booking_id);
+            exit;
+        }
+        try {
+            require_once __DIR__ . '/../assets/configs/db.php';
+            $pdo = DB::get();
+            // validate availability by date range
+            if (!empty($check_in_date) && !empty($check_out_date)) {
+                if (!$this->bookingModel->isRoomAvailable($room_id, $check_in_date, $check_out_date)) {
+                    flash_set('error', 'Phòng đã được đặt trong khoảng ngày này.');
+                    header('Location: ' . BASE_URL . '?r=booking_detail&id=' . $booking_id);
+                    exit;
+                }
+            }
+            if ($guest_id > 0) {
+                $stmt = $pdo->prepare("INSERT INTO room_assignments (booking_id, guest_id, room_id, check_in_date, check_out_date, status) VALUES (?, ?, ?, ?, ?, 'reserved')");
+                $stmt->execute([$booking_id, $guest_id, $room_id, $check_in_date, $check_out_date]);
+            } else {
+                $stmt = $pdo->prepare("INSERT INTO room_assignments (booking_id, room_id, check_in_date, check_out_date, status) VALUES (?, ?, ?, ?, 'reserved')");
+                $stmt->execute([$booking_id, $room_id, $check_in_date, $check_out_date]);
+            }
+            try { $pdo->prepare("UPDATE rooms SET status='reserved' WHERE id = ?")->execute([$room_id]); } catch (Exception $e2) {}
+            flash_set('success', 'Đã phân phòng cho đoàn.');
+        } catch (Exception $e) {
+            flash_set('error', 'Không thể phân phòng: ' . $e->getMessage());
+        }
+        header('Location: ' . BASE_URL . '?r=booking_detail&id=' . $booking_id);
+        exit;
+    }
+
+    public function unassignRoom() {
+        $assignment_id = (int)($_GET['assignment_id'] ?? 0);
+        $booking_id = (int)($_GET['booking_id'] ?? 0);
+        if ($assignment_id <= 0) {
+            flash_set('error', 'Thiếu ID phân phòng.');
+            header('Location: ' . BASE_URL . '?r=booking_detail&id=' . $booking_id);
+            exit;
+        }
+        try {
+            require_once __DIR__ . '/../assets/configs/db.php';
+            $pdo = DB::get();
+            $roomId = null;
+            try {
+                $st = $pdo->prepare("SELECT room_id FROM room_assignments WHERE id = ?");
+                $st->execute([$assignment_id]);
+                $roomId = $st->fetchColumn();
+            } catch (Exception $e0) {}
+            $stmt = $pdo->prepare("DELETE FROM room_assignments WHERE id = ?");
+            $stmt->execute([$assignment_id]);
+            if ($roomId) { try { $pdo->prepare("UPDATE rooms SET status='available' WHERE id = ?")->execute([(int)$roomId]); } catch (Exception $e3) {} }
+            flash_set('success', 'Đã gỡ phân phòng.');
+        } catch (Exception $e) {
+            flash_set('error', 'Không thể gỡ phân phòng: ' . $e->getMessage());
+        }
+        header('Location: ' . BASE_URL . '?r=booking_detail&id=' . $booking_id);
         exit;
     }
 }

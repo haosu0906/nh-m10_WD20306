@@ -6,6 +6,7 @@
     <title>Chi tiết Booking</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="<?= BASE_URL ?>assets/css/modern-ui.css" rel="stylesheet" />
     <style>
     :root {
         --accent: #667eea;
@@ -16,17 +17,7 @@
         background: #f8f9fa;
     }
 
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 200px;
-        padding: 20px;
-        background: linear-gradient(180deg, var(--accent), #764ba2);
-        color: #fff;
-        overflow: auto;
-    }
+    .sidebar {}
 
     .sidebar h3 {
         font-weight: 700;
@@ -52,7 +43,7 @@
 
     .main {
         margin-left: 200px;
-        padding: 22px;
+        padding: 86px 22px 22px; /* account for sticky topbar height */
     }
 
     .badge-status {
@@ -74,14 +65,12 @@
 </head>
 
 <body>
-    <!-- Sidebar (include standard template) -->
-    <?php
-        $current_page = 'booking';
-        require_once __DIR__ . '/../../assets/templates/sidebar.php';
-    ?>
+    <?php require_once __DIR__ . '/../../assets/configs/env.php'; ?>
+    <?php $current_page = 'booking'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
+    <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
 
     <!-- Main content -->
-    <main class="main">
+        <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h2>Chi tiết Booking #<?= htmlspecialchars($item['id']) ?></h2>
@@ -224,6 +213,9 @@
                                 <th>Giới tính</th>
                                 <th>Loại khách</th>
                                 <th>Hộ chiếu</th>
+                                <th>Phòng</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
                                 <th>Ghi chú</th>
                             </tr>
                         </thead>
@@ -232,10 +224,78 @@
                             <tr>
                                 <td><?= $idx + 1 ?></td>
                                 <td><?= htmlspecialchars($guest['full_name'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($guest['year_of_birth'] ?? '') ?></td>
+                                <td>
+                                    <?php 
+                                        $dob = $guest['dob'] ?? null; 
+                                        $yob = $guest['year_of_birth'] ?? null; 
+                                        echo htmlspecialchars($dob ? date('Y', strtotime($dob)) : ($yob ?? ''));
+                                    ?>
+                                </td>
                                 <td><?= htmlspecialchars($guest['gender'] ?? '') ?></td>
                                 <td><?= htmlspecialchars($guest['type'] ?? 'Người lớn') ?></td>
-                                <td><?= htmlspecialchars($guest['passport'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($guest['id_document_no'] ?? ($guest['passport'] ?? '')) ?></td>
+                                <td>
+                                    <?php $currentAssign = !empty($assignmentsByGuest[$guest['id'] ?? 0]) ? $assignmentsByGuest[$guest['id']] : null; ?>
+                                    <?php if ($currentAssign): ?>
+                                        <?= htmlspecialchars(($currentAssign['hotel_name'] ?? '') . ' - Phòng ' . ($currentAssign['room_number'] ?? '')) ?> (<?= htmlspecialchars($currentAssign['room_type'] ?? '') ?>)
+                                    <?php else: ?>
+                                        <span class="text-muted">Chưa gán</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if (!empty($guest['is_checked_in'])): ?>
+                                        <span class="badge bg-success">Đã đến</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-light text-dark border">Chưa đến</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <details>
+                                        <summary class="btn btn-sm btn-outline-primary">Thao tác</summary>
+                                        <div class="mt-2 p-2 border rounded bg-white">
+                                            <div class="mb-2">
+                                                <strong>Gán phòng</strong>
+                                                <form method="post" action="<?= BASE_URL ?>?r=booking_assign_room" class="mt-1">
+                                                    <input type="hidden" name="booking_id" value="<?= (int)$item['id'] ?>">
+                                                    <input type="hidden" name="guest_id" value="<?= (int)($guest['id'] ?? 0) ?>">
+                                                    <div class="d-flex flex-wrap gap-2">
+                                                        <select name="room_id" class="form-select form-select-sm" style="min-width:200px">
+                                                            <?php foreach(($availableRooms ?? []) as $r): ?>
+                                                                <option value="<?= (int)$r['id'] ?>">
+                                                                    <?= htmlspecialchars(($r['hotel_name'] ?? 'Khách sạn') . ' - Phòng ' . ($r['room_number'] ?? '')) ?> (<?= htmlspecialchars($r['room_type'] ?? 'Loại phòng') ?>)
+                                                                </option>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                        <input type="date" name="check_in_date" class="form-control form-control-sm" style="max-width:150px">
+                                                        <input type="date" name="check_out_date" class="form-control form-control-sm" style="max-width:150px">
+                                                        <button type="submit" class="btn btn-sm btn-primary">Gán</button>
+                                                        <?php if ($currentAssign): ?>
+                                                            <a class="btn btn-sm btn-outline-danger" href="<?= BASE_URL ?>?r=booking_unassign_room&assignment_id=<?= (int)$currentAssign['id'] ?>&booking_id=<?= (int)$item['id'] ?>" onclick="return confirm('Gỡ phân phòng khách này?')">Gỡ</a>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                            <div>
+                                                <strong>Check‑in</strong>
+                                                <form method="post" action="<?= BASE_URL ?>?r=booking_guest_checkin" class="mt-1">
+                                                    <input type="hidden" name="booking_id" value="<?= (int)$item['id'] ?>">
+                                                    <input type="hidden" name="guest_id" value="<?= (int)($guest['id'] ?? 0) ?>">
+                                                    <input type="hidden" name="checked" value="<?= !empty($guest['is_checked_in']) ? 0 : 1 ?>">
+                                                    <div class="d-flex flex-wrap gap-2">
+                                                        <select name="stage" class="form-select form-select-sm" style="max-width:160px">
+                                                            <option value="gather">Điểm tập trung</option>
+                                                            <option value="bus">Lên xe</option>
+                                                        </select>
+                                                        <input name="location" class="form-control form-control-sm" style="max-width:180px" placeholder="Vị trí (VD: Cổng A)">
+                                                        <button type="submit" class="btn btn-sm <?= !empty($guest['is_checked_in']) ? 'btn-success' : 'btn-outline-secondary' ?>">
+                                                            <?= !empty($guest['is_checked_in']) ? 'Đánh dấu chưa đến' : 'Đánh dấu đã đến' ?>
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </details>
+                                </td>
                                 <td><?= htmlspecialchars($guest['notes'] ?? '') ?></td>
                             </tr>
                             <?php endforeach; ?>
@@ -385,6 +445,78 @@
             </div>
         </div>
 
+        <!-- 5. PHÂN PHÒNG KHÁCH SẠN -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-bed me-2"></i>Phân phòng khách sạn</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Phòng khả dụng</label>
+                        <form method="post" action="<?= BASE_URL ?>?r=booking_assign_room" class="d-flex flex-wrap gap-2">
+                            <input type="hidden" name="booking_id" value="<?= (int)$item['id'] ?>">
+                            <select name="room_id" class="form-select" style="min-width:220px" required>
+                                <?php foreach(($availableRooms ?? []) as $r): ?>
+                                    <option value="<?= (int)$r['id'] ?>">
+                                        <?= htmlspecialchars(($r['hotel_name'] ?? 'Khách sạn') . ' - Phòng ' . ($r['room_number'] ?? '')) ?>
+                                        (<?= htmlspecialchars($r['room_type'] ?? 'Loại phòng') ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div class="d-flex flex-wrap gap-2">
+                                <div>
+                                    <label class="form-label">Nhận phòng</label>
+                                    <input type="date" name="check_in_date" class="form-control">
+                                </div>
+                                <div>
+                                    <label class="form-label">Trả phòng</label>
+                                    <input type="date" name="check_out_date" class="form-control">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Phân phòng</button>
+                        </form>
+                    </div>
+                </div>
+
+                <hr>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Khách sạn</th>
+                                <th>Phòng</th>
+                                <th>Loại phòng</th>
+                                <th>Nhận</th>
+                                <th>Trả</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($roomAssignments)): foreach ($roomAssignments as $ra): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($ra['hotel_name'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($ra['room_number'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($ra['room_type'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($ra['check_in_date'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($ra['check_out_date'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($ra['status'] ?? 'reserved') ?></td>
+                                    <td>
+                                        <a class="btn btn-sm btn-outline-danger" href="<?= BASE_URL ?>?r=booking_unassign_room&assignment_id=<?= (int)$ra['id'] ?>&booking_id=<?= (int)$item['id'] ?>" onclick="return confirm('Gỡ phân phòng này?')">Gỡ</a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; else: ?>
+                                <tr><td colspan="7" class="text-muted">Chưa có phân phòng</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- 5. YÊU CẦU ĐẶC BIỆT & GHI CHÚ -->
         <div class="card mb-4">
             <div class="card-header">
@@ -434,7 +566,7 @@
             <i class="fas fa-arrow-left me-2"></i>Quay lại
         </a>
         <?php endif; ?>
-    </main>
+        </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

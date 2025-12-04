@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Lịch trình: <?= htmlspecialchars($tour['title']) ?></title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="<?= BASE_URL ?>assets/css/modern-ui.css" rel="stylesheet" />
   <style>
     .timeline-day{border-left:4px solid #6366f1;padding-left:12px;margin-left:6px}
     .slot{display:flex;gap:12px;align-items:flex-start;padding:10px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px}
@@ -11,7 +12,10 @@
   </style>
 </head>
 <body>
-  <div class="container py-4">
+  <?php require_once __DIR__ . '/../../assets/configs/env.php'; ?>
+  <?php $current_page='tours'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
+  <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
+  <div class="main-content">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h3 class="mb-0">Lịch trình: <?= htmlspecialchars($tour['title']) ?></h3>
       <a class="btn btn-secondary" href="<?= BASE_URL ?>?r=tours">Quay lại</a>

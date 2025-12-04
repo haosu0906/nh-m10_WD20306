@@ -110,6 +110,21 @@ INSERT INTO `booking_requests` (`id`, `booking_id`, `guest_id`, `request_type`, 
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `guest_checkins`
+--
+
+CREATE TABLE `guest_checkins` (
+  `id` int NOT NULL,
+  `booking_id` int NOT NULL,
+  `guest_id` int NOT NULL,
+  `stage` enum('gather','bus') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `location` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `checked_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `booking_status_logs`
 --
 
@@ -450,6 +465,7 @@ INSERT INTO `rooms` (`id`, `hotel_id`, `room_type_id`, `room_number`, `status`) 
 CREATE TABLE `room_assignments` (
   `id` int NOT NULL,
   `booking_id` int DEFAULT NULL,
+  `guest_id` int DEFAULT NULL,
   `room_id` int DEFAULT NULL,
   `check_in_date` date DEFAULT NULL,
   `check_out_date` date DEFAULT NULL,
@@ -879,6 +895,15 @@ ALTER TABLE `booking_status_logs`
   ADD KEY `changed_by_user_id` (`changed_by_user_id`);
 
 --
+-- Indexes for table `guest_checkins`
+--
+ALTER TABLE `guest_checkins`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `booking_id` (`booking_id`),
+  ADD KEY `guest_id` (`guest_id`),
+  ADD KEY `stage` (`stage`);
+
+--
 -- Indexes for table `cancellation_policies`
 --
 ALTER TABLE `cancellation_policies`
@@ -969,7 +994,8 @@ ALTER TABLE `rooms`
 ALTER TABLE `room_assignments`
   ADD PRIMARY KEY (`id`),
   ADD KEY `booking_id` (`booking_id`),
-  ADD KEY `room_id` (`room_id`);
+  ADD KEY `room_id` (`room_id`),
+  ADD KEY `guest_id` (`guest_id`);
 
 --
 -- Indexes for table `room_types`
@@ -1102,6 +1128,12 @@ ALTER TABLE `booking_requests`
 --
 ALTER TABLE `booking_status_logs`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- AUTO_INCREMENT for table `guest_checkins`
+--
+ALTER TABLE `guest_checkins`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `cancellation_policies`

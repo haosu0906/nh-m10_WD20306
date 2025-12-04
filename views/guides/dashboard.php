@@ -6,7 +6,10 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
-  <div class="container py-4">
+  <?php require_once __DIR__ . '/../../assets/configs/env.php'; ?>
+  <?php $current_page='guides'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
+  <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
+  <main class="main" style="margin-left:200px;padding:86px 22px 22px">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h3 class="mb-0">Lịch tour của tôi</h3>
       <div class="d-flex gap-2">
@@ -53,6 +56,6 @@
         </div>
       </div>
     <?php endif; ?>
-  </div>
+  </main>
 </body>
 </html>

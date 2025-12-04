@@ -49,23 +49,14 @@ $infantPrice = $old['infant_price'] ?? ($price['infant_price'] ?? 0);
     <title><?= $title ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="<?= BASE_URL ?>assets/css/modern-ui.css" rel="stylesheet" />
     <style>
     :root {
         --accent: #667eea;
         --accent-dark: #5568d3
     }
 
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 200px;
-        padding: 20px;
-        background: linear-gradient(180deg, var(--accent), #764ba2);
-        color: #fff;
-        overflow: auto
-    }
+    
 
     .sidebar h3 {
         font-weight: 700;
@@ -74,25 +65,7 @@ $infantPrice = $old['infant_price'] ?? ($price['infant_price'] ?? 0);
         font-size: 16px
     }
 
-    .nav-link {
-        color: rgba(255, 255, 255, .95);
-        display: flex;
-        align-items: center;
-        gap: .6rem;
-        padding: .6rem;
-        border-radius: .5rem;
-        text-decoration: none
-    }
-
-    .nav-link:hover,
-    .nav-link.active {
-        background: rgba(255, 255, 255, .1)
-    }
-
-    .main {
-        margin-left: 200px;
-        padding: 22px
-    }
+    
 
     .itinerary-row {
         border: 1px solid #e5e7eb;
@@ -134,32 +107,11 @@ $infantPrice = $old['infant_price'] ?? ($price['infant_price'] ?? 0);
 </head>
 
 <body>
-    <div class="sidebar">
-        <h3><i class="fas fa-map-marked-alt"></i> Quản trị Tripmate</h3>
-        <nav class="nav flex-column">
-            <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=tour_categories"><i class="fas fa-map"></i> Danh mục tour</a>
-            <a class="nav-link active" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=suppliers"><i class="fas fa-handshake"></i> Nhà cung cấp</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=payments"><i class="fas fa-credit-card"></i> Thanh toán</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=cancellation_policies"><i class="fas fa-ban"></i> Chính sách hủy</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_assignments"><i class="fas fa-user-check"></i> Phân công HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_schedules"><i class="fas fa-calendar-alt"></i> Lịch HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_ratings"><i class="fas fa-star"></i> Đánh giá HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_login">
-                <i class="fas fa-door-open"></i> Portal HDV
-            </a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=admin_login">
-                <i class="fas fa-user-shield"></i> Đăng nhập Admin
-            </a>
-        </nav>
-    </div>
+    <?php require_once __DIR__ . '/../../assets/configs/env.php'; ?>
+    <?php $current_page='tours'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
 
-    <main class="main">
+    <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
+    <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h3><?= $title ?></h3>
@@ -179,289 +131,178 @@ $infantPrice = $old['infant_price'] ?? ($price['infant_price'] ?? 0);
         <?php endif; ?>
 
         <form method="post" action="<?= $formAction ?>" enctype="multipart/form-data">
-            <div class="card mb-4">
-                <div class="card-header fw-semibold">1. Thông tin cơ bản</div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Tên tour <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="title" required
-                                value="<?= $field('title') ?>">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Danh mục <span class="text-danger">*</span></label>
-                            <select name="category_id" class="form-select" required>
-                                <option value="">-- Chọn danh mục --</option>
-                                <?php foreach ($categories as $cat): ?>
-                                <option value="<?= $cat['id'] ?>"
-                                    <?= (string)$selectedCategory === (string)$cat['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($cat['name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Loại tour</label>
-                            <select name="tour_type" class="form-select">
-                                <?php foreach ($types as $key => $label): ?>
-                                <option value="<?= $key ?>" <?= $selectedType === $key ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($label) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Trạng thái</label>
-                            <select name="status" class="form-select">
-                                <?php foreach ($statuses as $key => $label): ?>
-                                <option value="<?= $key ?>" <?= $selectedStatus === $key ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($label) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Nhà cung cấp <span class="text-danger">*</span></label>
-                            <select name="supplier_id" class="form-select" required>
-                                <option value="">-- Chọn nhà cung cấp --</option>
-                                <?php foreach ($suppliers as $supplier): ?>
-                                <option value="<?= $supplier['id'] ?>"
-                                    <?= (string)$selectedSupplier === (string)$supplier['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($supplier['name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Chính sách hủy</label>
-                            <select name="cancellation_policy_id" class="form-select">
-                                <option value="">-- Chọn chính sách --</option>
-                                <?php if (!empty($cancellationPolicies)): foreach ($cancellationPolicies as $cp): ?>
-                                <option value="<?= $cp['id'] ?>" <?= (isset($tour['cancellation_policy_id']) && (int)$tour['cancellation_policy_id'] === (int)$cp['id']) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($cp['name']) ?> (<?= $cp['refund_percentage'] ?>%)
-                                </option>
-                                <?php endforeach; endif; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Số ngày tour</label>
-                            <?php $durationDays = (int)($old['duration_days'] ?? 3); if($durationDays<1){$durationDays=3;} ?>
-                            <input type="number" min="1" class="form-control" name="duration_days" id="duration_days"
-                                value="<?= $durationDays ?>">
-                            <small class="text-muted" id="nights_note">Mặc định: <span
-                                    id="nights_num"><?= max(0,$durationDays-1) ?></span> đêm</small>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Mô tả tour</label>
-                            <textarea name="description" rows="4"
-                                class="form-control"><?= $field('description') ?></textarea>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Ảnh cover</label>
-                            <input type="file" class="form-control" name="cover_image" accept="image/*">
-                            <small class="text-muted">Có thể nhập Link ảnh cover bên cạnh hoặc tải file tại đây. Ít nhất
-                                cần có 1 ảnh khi tạo mới.</small>
-                            <?php if ($editing && !empty($tour['cover_image'])): ?>
-                            <div class="mt-2">
-                                <?php $isExternal = preg_match('/^https?:\/\//i', (string)$tour['cover_image']); ?>
-                                <img src="<?= $isExternal ? $tour['cover_image'] : (BASE_ASSETS_UPLOADS . $tour['cover_image']) ?>"
-                                    class="gallery-thumb" alt="cover">
-                            </div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Link ảnh cover</label>
-                            <input type="url" class="form-control" name="cover_url"
-                                value="<?= htmlspecialchars($old['cover_url'] ?? ($tour['cover_image'] ?? '')) ?>"
-                                placeholder="https://...">
-                        </div>
-                    </div>
+          <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light fw-bold">1. Thông tin cơ bản</div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-8">
+                  <label class="form-label fw-bold">Tên tour</label>
+                  <input type="text" name="title" class="form-control form-control-lg" required value="<?= $field('title') ?>">
                 </div>
-            </div>
-
-            <div class="card mb-4 section-collapsible collapsed" id="sec-itinerary">
-                <div class="card-header fw-semibold" onclick="toggleSec('sec-itinerary')">2. Lịch trình tour <span
-                        class="chev">▾</span></div>
-                <div class="card-body section-body">
-                    <p class="text-muted">Nhập lịch trình chi tiết theo từng ngày, từng khung giờ. Thông tin này sẽ dùng
-                        cho cả trang Lịch trình và Portal HDV.</p>
-
-                    <div id="itinerary-wrapper">
-                        <?php for ($i = 0; $i < $detailRows; $i++): ?>
-                        <div class="itinerary-row">
-                            <div class="row g-3 align-items-end">
-                                <div class="col-md-1">
-                                    <label class="form-label">Ngày</label>
-                                    <input type="number" min="1" class="form-control" name="it_item_day[]"
-                                        value="<?= htmlspecialchars($detailDays[$i] ?? ($i+1)) ?>">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Bắt đầu</label>
-                                    <input type="time" class="form-control" name="it_item_start[]"
-                                        value="<?= htmlspecialchars($detailStarts[$i] ?? '08:00') ?>">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Kết thúc</label>
-                                    <input type="time" class="form-control" name="it_item_end[]"
-                                        value="<?= htmlspecialchars($detailEnds[$i] ?? '') ?>">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Buổi</label>
-                                    <?php $slotsMap = ['morning'=>'Sáng','noon'=>'Trưa','afternoon'=>'Chiều','evening'=>'Tối']; $curSlot = $detailSlots[$i] ?? ''; ?>
-                                    <select name="it_item_slot[]" class="form-select">
-                                        <option value="">-- Chọn buổi --</option>
-                                        <?php foreach($slotsMap as $k=>$v): ?>
-                                        <option value="<?= $k ?>" <?= $curSlot===$k?'selected':'' ?>><?= $v ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-md-5">
-                                    <label class="form-label">Tiêu đề</label>
-                                    <input type="text" class="form-control" name="it_item_title[]"
-                                        value="<?= htmlspecialchars($detailTitles[$i] ?? '') ?>"
-                                        placeholder="VD: Tham quan điểm A, di chuyển đến B">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Chi tiết</label>
-                                    <textarea class="form-control" rows="2" name="it_item_details[]"
-                                        placeholder="Mô tả hoạt động, thời lượng, ghi chú..."><?= htmlspecialchars($detailNotes[$i] ?? '') ?></textarea>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Địa điểm</label>
-                                    <input type="text" class="form-control" name="it_item_location[]"
-                                        value="<?= htmlspecialchars($detailLocations[$i] ?? '') ?>"
-                                        placeholder="Tên địa điểm tham quan">
-                                </div>
-                            </div>
-                        </div>
-                        <?php endfor; ?>
-                    </div>
-                    <button type="button" class="btn btn-outline-primary btn-sm" id="add-itinerary"><i
-                            class="fas fa-plus"></i> Thêm hoạt động</button>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Mã tour</label>
+                    <input type="text" name="tour_code" class="form-control form-control-lg" value="<?= $field('tour_code') ?>">
+                  </div>
+                  <div>
+                    <label class="form-label fw-bold">Danh mục</label>
+                    <select name="category_id" class="form-select form-select-lg" required>
+                      <option value="">-- Chọn danh mục --</option>
+                      <?php foreach ($categories as $cat): ?>
+                      <option value="<?= $cat['id'] ?>" <?= (string)$selectedCategory === (string)$cat['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($cat['name']) ?>
+                      </option>
+                      <?php endforeach; ?>
+                    </select>
+                  </div>
                 </div>
-            </div>
-
-            <div class="card mb-4 section-collapsible collapsed" id="sec-prices">
-                <div class="card-header fw-semibold" onclick="toggleSec('sec-prices')">3. Giá bán <span
-                        class="chev">▾</span></div>
-                <div class="card-body section-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Giá người lớn <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="adult_price" min="0" step="1000"
-                                value="<?= htmlspecialchars($adultPrice) ?>" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Giá trẻ em</label>
-                            <input type="number" class="form-control" name="child_price"
-                                value="<?= htmlspecialchars($childPrice) ?>">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Giá em bé</label>
-                            <input type="number" class="form-control" name="infant_price"
-                                value="<?= htmlspecialchars($infantPrice) ?>">
-                        </div>
-                    </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Loại tour</label>
+                  <select name="tour_type" class="form-select form-select-lg">
+                    <?php foreach ($types as $key => $label): ?>
+                    <option value="<?= $key ?>" <?= $selectedType === $key ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
+                    <?php endforeach; ?>
+                  </select>
                 </div>
-            </div>
-
-            <div class="card mb-4 section-collapsible collapsed" id="sec-gallery">
-                <div class="card-header fw-semibold" onclick="toggleSec('sec-gallery')">4. Hình ảnh tour <span
-                        class="chev">▾</span></div>
-                <div class="card-body section-body">
-                    <div class="mb-3">
-                        <label class="form-label">Tải lên hình ảnh (có thể chọn nhiều)</label>
-                        <input type="file" class="form-control" name="gallery[]" accept="image/*" multiple>
-                    </div>
-                    <?php if ($editing && !empty($gallery)): ?>
-                    <div class="d-flex flex-wrap gap-3">
-                        <?php foreach ($gallery as $image): ?>
-                        <label class="text-center">
-                            <img src="<?= BASE_ASSETS_UPLOADS . $image['image_path'] ?>" class="gallery-thumb mb-2"
-                                alt="gallery">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="remove_images[]"
-                                    value="<?= $image['id'] ?>" id="img<?= $image['id'] ?>">
-                                <label class="form-check-label" for="img<?= $image['id'] ?>">Xóa</label>
-                            </div>
-                        </label>
-                        <?php endforeach; ?>
-                    </div>
-                    <?php endif; ?>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Nhà cung cấp</label>
+                  <select name="supplier_id" class="form-select form-select-lg" required>
+                    <option value="">-- Chọn nhà cung cấp --</option>
+                    <?php foreach ($suppliers as $supplier): ?>
+                    <option value="<?= $supplier['id'] ?>" <?= (string)$selectedSupplier === (string)$supplier['id'] ? 'selected' : '' ?>>
+                      <?= htmlspecialchars($supplier['name']) ?>
+                    </option>
+                    <?php endforeach; ?>
+                  </select>
                 </div>
-            </div>
-
-            <div class="card mb-4 section-collapsible collapsed" id="sec-policy">
-                <div class="card-header fw-semibold" onclick="toggleSec('sec-policy')">5. Chính sách <span
-                        class="chev">▾</span></div>
-                <div class="card-body section-body">
-                    <label class="form-label">Điều khoản & chính sách hủy tour</label>
-                    <textarea name="policy" rows="5" class="form-control"><?= $field('policy') ?></textarea>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Trạng thái</label>
+                  <select name="status" class="form-select form-select-lg">
+                    <?php foreach ($statuses as $key => $label): ?>
+                    <option value="<?= $key ?>" <?= $selectedStatus === $key ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
+                    <?php endforeach; ?>
+                  </select>
                 </div>
+                <div class="col-md-3">
+                  <label class="form-label fw-bold">Số ngày</label>
+                  <?php $durationDays = (int)($old['duration_days'] ?? 3); if ($durationDays < 1) { $durationDays = 3; } ?>
+                  <input type="number" min="1" id="duration_days" name="duration_days" class="form-control form-control-lg"
+                         value="<?= $durationDays ?>"
+                         oninput="(function(i){var n=document.getElementById('duration_nights'); if(n){var v=parseInt(i.value||'0',10); n.value=Math.max(0,v-1);} })(this)">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label fw-bold">Số đêm</label>
+                  <input type="number" id="duration_nights" class="form-control form-control-lg" value="<?= max(0, $durationDays - 1) ?>" readonly>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Giá niêm yết</label>
+                  <input type="number" name="price_listed" class="form-control form-control-lg" min="0" step="1000"
+                         value="<?= htmlspecialchars($adultPrice) ?>">
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-bold">Ảnh Cover</label>
+                  <div style="border: 2px dashed #ccc; padding: 20px; text-align: center;">
+                    <div class="mb-2">Kéo thả ảnh vào đây hoặc chọn từ máy</div>
+                    <input type="file" name="cover_image" class="form-control" accept="image/*">
+                    <div class="mt-2">Hoặc nhập URL ảnh</div>
+                    <input type="url" name="cover_url" class="form-control"
+                           value="<?= htmlspecialchars($old['cover_url'] ?? ($tour['cover_image'] ?? '')) ?>"
+                           placeholder="https://...">
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-bold">Mô tả tour</label>
+                  <textarea name="description" rows="4" class="form-control form-control-lg"><?= $field('description') ?></textarea>
+                </div>
+              </div>
             </div>
+          </div>
 
+          <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light fw-bold">2. Lịch trình</div>
+            <div class="card-body">
+              <div class="row g-3 align-items-end">
+                <div class="col-md-1">
+                  <label class="form-label fw-bold">Ngày</label>
+                  <input type="number" name="it_item_day[]" class="form-control form-control-lg" min="1" value="1">
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label fw-bold">Bắt đầu</label>
+                  <input type="time" name="it_item_start[]" class="form-control form-control-lg" value="08:00">
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label fw-bold">Kết thúc</label>
+                  <input type="time" name="it_item_end[]" class="form-control form-control-lg" value="">
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label fw-bold">Buổi</label>
+                  <select name="it_item_slot[]" class="form-select form-select-lg">
+                    <option value="">-- Chọn buổi --</option>
+                    <option value="morning">Sáng</option>
+                    <option value="noon">Trưa</option>
+                    <option value="afternoon">Chiều</option>
+                    <option value="evening">Tối</option>
+                  </select>
+                </div>
+                <div class="col-md-5">
+                  <label class="form-label fw-bold">Tiêu đề</label>
+                  <input type="text" name="it_item_title[]" class="form-control form-control-lg" placeholder="VD: Tham quan điểm A, di chuyển đến B">
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-bold">Chi tiết</label>
+                  <textarea name="it_item_details[]" rows="3" class="form-control form-control-lg" placeholder="Mô tả hoạt động, thời lượng, ghi chú..."></textarea>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Địa điểm</label>
+                  <input type="text" name="it_item_location[]" class="form-control form-control-lg" placeholder="Tên địa điểm tham quan">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light fw-bold">3. Giá</div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Giá người lớn</label>
+                  <input type="number" name="adult_price" class="form-control form-control-lg" min="0" step="1000"
+                         value="<?= htmlspecialchars($adultPrice) ?>" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Giá trẻ em</label>
+                  <input type="number" name="child_price" class="form-control form-control-lg" min="0" step="1000"
+                         value="<?= htmlspecialchars($childPrice) ?>">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Giá em bé</label>
+                  <input type="number" name="infant_price" class="form-control form-control-lg" min="0" step="1000"
+                         value="<?= htmlspecialchars($infantPrice) ?>">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="position-sticky bottom-0 bg-white border-top py-3">
             <div class="text-end">
-                <button type="submit" class="btn btn-primary btn-lg">Lưu tour</button>
+              <button type="submit" class="btn btn-primary btn-lg">Lưu lại</button>
+              <a href="<?= BASE_URL ?>?r=tours" class="btn btn-outline-secondary btn-lg">Hủy</a>
             </div>
+          </div>
         </form>
-    </main>
+    </div>
 
     <script>
-    function toggleSec(id) {
-        const sec = document.getElementById(id);
-        sec.classList.toggle('collapsed');
-    }
-    const durInput = document.getElementById('duration_days');
-    if (durInput) {
-        const nightsNum = document.getElementById('nights_num');
-        const sync = () => {
-            const d = parseInt(durInput.value || '1', 10);
-            nightsNum.textContent = Math.max(0, d - 1)
-        };
-        durInput.addEventListener('input', sync);
-        sync();
-    }
-    const addBtn = document.getElementById('add-itinerary');
-    const wrapper = document.getElementById('itinerary-wrapper');
-    addBtn.addEventListener('click', () => {
-        const div = document.createElement('div');
-        div.className = 'itinerary-row';
-        div.innerHTML = `
-        <div class="row g-3 align-items-end">
-          <div class="col-md-1">
-            <label class="form-label">Ngày</label>
-            <input type="number" class="form-control" name="it_item_day[]" value="1">
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Bắt đầu</label>
-            <input type="time" class="form-control" name="it_item_start[]" value="08:00">
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Kết thúc</label>
-            <input type="time" class="form-control" name="it_item_end[]" value="">
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Buổi</label>
-            <select name="it_item_slot[]" class="form-select">
-              <option value="">-- Chọn buổi --</option>
-              <option value="morning">Sáng</option>
-              <option value="noon">Trưa</option>
-              <option value="afternoon">Chiều</option>
-              <option value="evening">Tối</option>
-            </select>
-          </div>
-          <div class="col-md-5">
-            <label class="form-label">Tiêu đề</label>
-            <input type="text" class="form-control" name="it_item_title[]" value="" placeholder="VD: Tham quan điểm A, di chuyển đến B">
-          </div>
-          <div class="col-12">
-            <label class="form-label">Chi tiết</label>
-            <textarea class="form-control" rows="2" name="it_item_details[]" placeholder="Mô tả hoạt động, thời lượng, ghi chú..."></textarea>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Địa điểm</label>
-            <input type="text" class="form-control" name="it_item_location[]" value="" placeholder="Tên địa điểm tham quan">
-          </div>
-        </div>
-      `;
-        wrapper.appendChild(div);
-    });
+    (function(){
+      var durInput = document.getElementById('duration_days');
+      var nights = document.getElementById('duration_nights');
+      if(durInput && nights){
+        durInput.addEventListener('input', function(){
+          var v = parseInt(durInput.value||'0',10);
+          nights.value = Math.max(0, v-1);
+        });
+      }
+    })();
     </script>
 </body>
 

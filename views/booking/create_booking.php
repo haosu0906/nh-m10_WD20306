@@ -6,6 +6,7 @@
     <title>Tạo Booking mới</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="<?= BASE_URL ?>assets/css/modern-ui.css" rel="stylesheet" />
     <style>
     :root {
         --accent: #667eea;
@@ -16,17 +17,7 @@
         background: #f8f9fa;
     }
 
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 200px;
-        padding: 20px;
-        background: linear-gradient(180deg, var(--accent), #764ba2);
-        color: #fff;
-        overflow: auto;
-    }
+    
 
     .sidebar h3 {
         font-weight: 700;
@@ -35,25 +26,7 @@
         font-size: 16px;
     }
 
-    .nav-link {
-        color: rgba(255, 255, 255, .95);
-        display: flex;
-        align-items: center;
-        gap: .6rem;
-        padding: .6rem;
-        border-radius: .5rem;
-        text-decoration: none;
-    }
-
-    .nav-link:hover,
-    .nav-link.active {
-        background: rgba(255, 255, 255, .1);
-    }
-
-    .main {
-        margin-left: 200px;
-        padding: 22px;
-    }
+    
     </style>
 </head>
 
@@ -62,8 +35,8 @@
         $current_page = 'booking';
         require_once __DIR__ . '/../../assets/templates/sidebar.php';
     ?>
-
-    <main class="main">
+    <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
+    <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h3>Tạo Booking mới</h3>
@@ -168,7 +141,7 @@
                 </div>
             </div>
         </form>
-    </main>
+    </div>
 
     <script>
     // Gán tour_id theo schedule được chọn

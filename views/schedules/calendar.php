@@ -48,7 +48,7 @@
 
     .main {
         margin-left: 200px;
-        padding: 22px
+        padding: 86px 22px 22px
     }
 
     .calendar-grid {
@@ -113,7 +113,8 @@
         </nav>
     </div>
 
-    <main class="main">
+    <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
+    <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h3 class="mb-0">Lịch khởi hành tour</h3>
@@ -186,7 +187,7 @@
         }
       ?>
         </div>
-    </main>
+    </div>
 </body>
 
 </html>

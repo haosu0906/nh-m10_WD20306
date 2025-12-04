@@ -151,9 +151,29 @@ class TourController
 
     public function index()
     {
+        $q = trim($_GET['q'] ?? '');
+        $categoryId = isset($_GET['category_id']) ? (int)$_GET['category_id'] : 0;
+        $statusFilter = trim($_GET['status'] ?? '');
         $tours = $this->tourModel->all();
+        if ($q !== '' || $categoryId > 0 || $statusFilter !== '') {
+            $tours = array_values(array_filter($tours, function ($row) use ($q, $categoryId, $statusFilter) {
+                $ok = true;
+                if ($q !== '') {
+                    $hay = strtolower((string)($row['title'] ?? '') . ' ' . (string)($row['description'] ?? ''));
+                    $ok = $ok && (strpos($hay, strtolower($q)) !== false);
+                }
+                if ($categoryId > 0) {
+                    $ok = $ok && ((int)($row['category_id'] ?? 0) === $categoryId);
+                }
+                if ($statusFilter !== '') {
+                    $ok = $ok && ((string)($row['status'] ?? '') === $statusFilter);
+                }
+                return $ok;
+            }));
+        }
         $types = $this->types;
         $statuses = $this->statuses;
+        $categories = $this->categoryModel->all();
         $priceByTour = [];
         foreach ($tours as $tour) {
             $priceByTour[$tour['id']] = $this->priceModel->getByTour($tour['id']);

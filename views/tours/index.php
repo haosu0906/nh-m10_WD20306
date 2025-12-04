@@ -14,44 +14,9 @@
         --accent-dark: #5568d3
     }
 
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 200px;
-        padding: 20px;
-        background: linear-gradient(180deg, var(--accent), #764ba2);
-        color: #fff;
-        overflow: auto
-    }
+    /* Sidebar styles are provided by modern-ui.css */
 
-    .sidebar h3 {
-        font-weight: 700;
-        margin-bottom: 1rem;
-        text-align: center;
-        font-size: 16px
-    }
-
-    .nav-link {
-        color: rgba(255, 255, 255, .95);
-        display: flex;
-        align-items: center;
-        gap: .6rem;
-        padding: .6rem;
-        border-radius: .5rem;
-        text-decoration: none
-    }
-
-    .nav-link:hover,
-    .nav-link.active {
-        background: rgba(255, 255, 255, .1)
-    }
-
-    .main {
-        margin-left: 200px;
-        padding: 22px
-    }
+    .main-content {}
 
     .tour-cover {
         width: 80px;
@@ -71,9 +36,10 @@
     .tours-grid-header {
         display: grid;
         grid-template-columns: 40px minmax(320px, 2fr) 140px 120px 160px 160px 120px 120px 140px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        font-weight: 600;
+        background: #f1f5f9;
+        color: #64748b;
+        border-bottom: 1px solid #e5e7eb;
+        font-weight: 700;
         font-size: 0.875rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -111,12 +77,12 @@
     }
 
     .tours-grid-cell {
-        padding: 18px 14px;
+        padding: 12px 12px;
         border-right: 1px solid #e5e7eb;
         display: flex;
         align-items: center;
         font-size: 0.9rem;
-        min-height: 82px;
+        min-height: 78px;
     }
 
     .tours-grid-cell:last-child {
@@ -265,32 +231,12 @@
     }
     </style>
 </head>
-
 <body>
-    <div class="sidebar">
-        <h3><i class="fas fa-map-marked-alt"></i> Quản trị Tripmate</h3>
-        <nav class="nav flex-column">
-            <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=tour_categories"><i class="fas fa-map"></i> Danh mục tour</a>
-            <a class="nav-link active" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=suppliers"><i class="fas fa-handshake"></i> Nhà cung cấp</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_assignments"><i class="fas fa-user-check"></i> Phân công HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_schedules"><i class="fas fa-calendar-alt"></i> Lịch HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_ratings"><i class="fas fa-star"></i> Đánh giá HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_login">
-                <i class="fas fa-door-open"></i> Portal HDV
-            </a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=admin_login">
-                <i class="fas fa-user-shield"></i> Đăng nhập Admin
-            </a>
+    <?php require_once __DIR__ . '/../../assets/configs/env.php'; ?>
+    <?php $current_page='tours'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
 
-        </nav>
-    </div>
-
-    <main class="main">
+    <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
+    <div class="main-content">
         <?php if (isset($_SESSION['flash_success'])): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <?= $_SESSION['flash_success'] ?>
@@ -307,17 +253,53 @@
             <?php unset($_SESSION['flash_error']); ?>
         <?php endif; ?>
         
-        <div class="d-flex justify-content-between align-items-center mb-4 fade-in">
-            <div>
-                <h1 class="mb-2">🗺️ Quản Lý Tours</h1>
-                <p class="text-muted mb-0">Thông tin cơ bản, lịch trình, giá và hình ảnh</p>
-            </div>
-            <div>
-                <a class="btn btn-success" href="<?= BASE_URL ?>?r=tours_create">
-                    <i class="fas fa-plus me-2"></i>Thêm tour
-                </a>
-            </div>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0" style="color:#1e293b;">Quản lý Tours</h3>
+            <a class="btn btn-primary" href="<?= BASE_URL ?>?r=tours_create">
+                <i class="fas fa-plus me-2"></i>Thêm tour
+            </a>
         </div>
+
+        <?php 
+            $categoryOptions = (isset($categories) && is_array($categories)) ? $categories : [];
+            $statusOptions = (isset($statuses) && is_array($statuses)) ? $statuses : ['active' => 'Đang hoạt động', 'inactive' => 'Ngừng hoạt động'];
+            $selectedCategory = $_GET['category_id'] ?? '';
+            $selectedStatus = $_GET['status'] ?? '';
+            $q = $_GET['q'] ?? '';
+        ?>
+        <form method="get" action="<?= BASE_URL ?>" class="card border-0 shadow-sm mb-3">
+            <input type="hidden" name="r" value="tours">
+            <div class="card-body">
+                <div class="row g-3 align-items-center">
+                    <div class="col-lg-6">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" name="q" class="form-control" placeholder="Tìm kiếm tour..." value="<?= htmlspecialchars($q) ?>">
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <select class="form-select" name="category_id">
+                            <option value="">Tất cả danh mục</option>
+                            <?php foreach ($categoryOptions as $cat): ?>
+                                <?php 
+                                    $cid = is_array($cat) ? ($cat['id'] ?? '') : (string)$cat;
+                                    $cname = is_array($cat) ? ($cat['name'] ?? $cid) : (string)$cat;
+                                ?>
+                                <option value="<?= htmlspecialchars($cid) ?>" <?= (string)$selectedCategory === (string)$cid ? 'selected' : '' ?>><?= htmlspecialchars($cname) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-lg-3">
+                        <select class="form-select" name="status">
+                            <option value="">Tất cả trạng thái</option>
+                            <?php foreach ($statusOptions as $key => $label): ?>
+                                <option value="<?= htmlspecialchars($key) ?>" <?= (string)$selectedStatus === (string)$key ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </form>
 
         <!-- Tours Grid Table -->
         <div class="tours-grid-container fade-in">
@@ -485,7 +467,7 @@
             </div>
         </div>
         <?php endif; ?>
-    </main>
+    </div>
 </body>
 
 </html>

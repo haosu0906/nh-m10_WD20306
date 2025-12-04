@@ -9,6 +9,7 @@ require_once __DIR__ . '/../../assets/configs/env.php';
     <title>Sửa Thanh toán</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="<?= BASE_URL ?>assets/css/modern-ui.css" rel="stylesheet" />
     <style>
     :root {
         --accent: #667eea;
@@ -19,17 +20,7 @@ require_once __DIR__ . '/../../assets/configs/env.php';
         background: #f8f9fa;
     }
 
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 200px;
-        padding: 20px;
-        background: linear-gradient(180deg, var(--accent), #764ba2);
-        color: #fff;
-        overflow: auto;
-    }
+    
 
     .sidebar h3 {
         font-weight: 700;
@@ -38,30 +29,14 @@ require_once __DIR__ . '/../../assets/configs/env.php';
         font-size: 16px;
     }
 
-    .nav-link {
-        color: rgba(255, 255, 255, .95);
-        display: flex;
-        align-items: center;
-        gap: .6rem;
-        padding: .6rem;
-        border-radius: .5rem;
-        text-decoration: none;
-    }
-
-    .nav-link:hover,
-    .nav-link.active {
-        background: rgba(255, 255, 255, .1);
-    }
-
-    .main {
-        margin-left: 200px;
-        padding: 22px;
-    }
+    
     </style>
 </head>
 
 <body>
-    <div class="sidebar">
+    <?php $current_page='payments'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
+    <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
+    <div class="sidebar-old" style="display:none">
         <h3><i class="fas fa-map-marked-alt"></i> Quản trị Tripmate</h3>
         <nav class="nav flex-column">
             <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
@@ -84,36 +59,36 @@ require_once __DIR__ . '/../../assets/configs/env.php';
             </a>
         </nav>
     </div>
-
-    <main class="main">
+    <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3>Sửa Thanh toán #<?= $payment['id'] ?></h3>
+            <h3 class="mb-0">Sửa Thanh toán #<?= $payment['id'] ?></h3>
             <a href="<?= BASE_URL ?>?r=payments" class="btn btn-outline-secondary">Quay lại</a>
         </div>
 
         <form method="post" action="<?= BASE_URL ?>?r=payments_update&id=<?= $payment['id'] ?>">
-            <div class="card">
-                <div class="card-header fw-semibold">Thông tin thanh toán</div>
+            <div class="card shadow-sm">
+                <div class="card-header bg-light fw-bold">Thông tin thanh toán</div>
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Booking</label>
-                            <select class="form-select" name="booking_id" required>
+                            <label class="form-label fw-bold">Booking</label>
+                            <select class="form-select form-select-lg" name="booking_id" required>
                                 <option value="">-- Chọn booking --</option>
                                 <?php foreach ($bookings as $b): ?>
-                                <option value="<?= $b['id'] ?>" <?= (int)$payment['booking_id'] === (int)$b['id'] ? 'selected' : '' ?>>
+                                <option value="<?= $b['id'] ?>" <?= (int)$payment['booking_id'] === (int)$b['id'] ? 'selected' : '' ?>
+                                    >
                                     BK<?= $b['booking_code'] ?> - <?= htmlspecialchars($b['tour_title']) ?>
                                 </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Số tiền (VND)</label>
-                            <input type="number" class="form-control" name="amount" min="0" step="0.01" value="<?= $payment['amount'] ?>" required>
+                            <label class="form-label fw-bold">Số tiền (VND)</label>
+                            <input type="number" class="form-control form-control-lg" name="amount" min="0" step="0.01" value="<?= $payment['amount'] ?>" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Phương thức thanh toán</label>
-                            <select class="form-select" name="payment_method" required>
+                            <label class="form-label fw-bold">Phương thức thanh toán</label>
+                            <select class="form-select form-select-lg" name="payment_method" required>
                                 <option value="cash" <?= $payment['payment_method'] === 'cash' ? 'selected' : '' ?>>Tiền mặt</option>
                                 <option value="bank_transfer" <?= $payment['payment_method'] === 'bank_transfer' ? 'selected' : '' ?>>Chuyển khoản</option>
                                 <option value="credit_card" <?= $payment['payment_method'] === 'credit_card' ? 'selected' : '' ?>>Thẻ tín dụng</option>
@@ -122,16 +97,16 @@ require_once __DIR__ . '/../../assets/configs/env.php';
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Mã giao dịch (nếu có)</label>
-                            <input type="text" class="form-control" name="transaction_id" value="<?= htmlspecialchars($payment['transaction_id'] ?? '') ?>">
+                            <label class="form-label fw-bold">Mã giao dịch (nếu có)</label>
+                            <input type="text" class="form-control form-control-lg" name="transaction_id" value="<?= htmlspecialchars($payment['transaction_id'] ?? '') ?>">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Ngày thanh toán</label>
-                            <input type="datetime-local" class="form-control" name="payment_date" value="<?= !empty($payment['payment_date']) ? date('Y-m-d\TH:i', strtotime($payment['payment_date'])) : '' ?>" required>
+                            <label class="form-label fw-bold">Ngày thanh toán</label>
+                            <input type="datetime-local" class="form-control form-control-lg" name="payment_date" value="<?= !empty($payment['payment_date']) ? date('Y-m-d\TH:i', strtotime($payment['payment_date'])) : '' ?>" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Trạng thái</label>
-                            <select class="form-select" name="status" required>
+                            <label class="form-label fw-bold">Trạng thái</label>
+                            <select class="form-select form-select-lg" name="status" required>
                                 <option value="pending" <?= $payment['status'] === 'pending' ? 'selected' : '' ?>>Chờ xử lý</option>
                                 <option value="completed" <?= $payment['status'] === 'completed' ? 'selected' : '' ?>>Hoàn tất</option>
                                 <option value="failed" <?= $payment['status'] === 'failed' ? 'selected' : '' ?>>Thất bại</option>
@@ -139,18 +114,18 @@ require_once __DIR__ . '/../../assets/configs/env.php';
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Ghi chú</label>
-                            <textarea class="form-control" name="notes" rows="3"><?= htmlspecialchars($payment['notes'] ?? '') ?></textarea>
+                            <label class="form-label fw-bold">Ghi chú</label>
+                            <textarea class="form-control form-control-lg" name="notes" rows="3"><?= htmlspecialchars($payment['notes'] ?? '') ?></textarea>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer text-end">
-                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
-                    <a href="<?= BASE_URL ?>?r=payments" class="btn btn-outline-secondary">Hủy</a>
+                    <button type="submit" class="btn btn-primary btn-lg">Lưu thay đổi</button>
+                    <a href="<?= BASE_URL ?>?r=payments" class="btn btn-outline-secondary btn-lg">Hủy</a>
                 </div>
             </div>
         </form>
-    </main>
+    </div>
 </body>
 
 </html>
