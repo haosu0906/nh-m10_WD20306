@@ -19,6 +19,7 @@
     <div class="card-header bg-light fw-bold"><h5 class="mb-0">Chỉnh sửa Booking #<?= htmlspecialchars($item['id'] ?? '') ?></h5></div>
     <div class="card-body">
       <form method="post" action="<?= BASE_URL ?>?r=booking_update">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>" />
         <input type="hidden" name="id" value="<?= htmlspecialchars($item['id'] ?? '') ?>" />
         <div class="mb-3">
           <label class="form-label fw-bold">Tour</label>

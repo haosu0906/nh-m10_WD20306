@@ -356,6 +356,14 @@
                                    class="btn btn-sm btn-outline-info" title="Xem chi tiết">
                                     <i class="fas fa-eye"></i>
                                 </a>
+                                <a href="<?= BASE_URL ?>?r=tour_manifest&departure_id=<?= (int)$row['id'] ?>" 
+                                   class="btn btn-sm btn-outline-secondary" title="Danh sách đoàn">
+                                    <i class="fas fa-clipboard-list"></i>
+                                </a>
+                                <a href="<?= BASE_URL ?>?r=qr_scan&departure_id=<?= (int)$row['id'] ?>" 
+                                   class="btn btn-sm btn-outline-primary" title="Quét QR">
+                                    <i class="fas fa-qrcode"></i>
+                                </a>
                                 <a href="<?= BASE_URL ?>?r=schedules_delete&id=<?= (int)$row['id'] ?>" 
                                    class="btn btn-sm btn-outline-danger" 
                                    onclick="return confirm('Xác nhận xóa lịch này?')" title="Xóa">

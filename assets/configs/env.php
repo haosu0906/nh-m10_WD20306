@@ -28,3 +28,5 @@ define('DB_OPTIONS', [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
 ]);
+define('MAIL_FROM_EMAIL', 'no-reply@tripmate.local');
+define('MAIL_FROM_NAME', 'TripMate');

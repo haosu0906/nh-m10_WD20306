@@ -89,3 +89,41 @@ if (!function_exists('redirect_with_flash')) {
         exit;
     }
 }
+
+if (!function_exists('csrf_token')) {
+    function csrf_token()
+    {
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['csrf_token'];
+    }
+}
+
+if (!function_exists('csrf_validate')) {
+    function csrf_validate($token)
+    {
+        $t = (string)($token ?? '');
+        $s = (string)($_SESSION['csrf_token'] ?? '');
+        return $t !== '' && hash_equals($s, $t);
+    }
+}
+
+if (!function_exists('send_email')) {
+    function send_email($to, $subject, $html, $text = '')
+    {
+        $fromEmail = defined('MAIL_FROM_EMAIL') ? MAIL_FROM_EMAIL : 'no-reply@localhost';
+        $fromName = defined('MAIL_FROM_NAME') ? MAIL_FROM_NAME : 'TripMate';
+        $headers = [];
+        $headers[] = 'MIME-Version: 1.0';
+        $headers[] = 'Content-type: text/html; charset=UTF-8';
+        $headers[] = 'From: ' . sprintf('"%s" <%s>', $fromName, $fromEmail);
+        $headers[] = 'Reply-To: ' . sprintf('"%s" <%s>', $fromName, $fromEmail);
+        $headers[] = 'X-Mailer: PHP/' . phpversion();
+        $headersStr = implode("\r\n", $headers);
+        if ($html === '' && $text !== '') {
+            $html = nl2br(htmlspecialchars($text, ENT_QUOTES, 'UTF-8'));
+        }
+        return mail($to, $subject, $html, $headersStr);
+    }
+}

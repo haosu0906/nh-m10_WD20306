@@ -21,10 +21,6 @@ class SupplierController
             'transport'  => 'Vận chuyển',
             'ticket'     => 'Vé tham quan',
             'insurance'  => 'Bảo hiểm',
-            'guide'      => 'Hướng dẫn viên',
-            'meal'       => 'Ăn uống',
-            'entertain'  => 'Giải trí',
-            'other'      => 'Dịch vụ khác',
         ];
 
         $suppliers = $this->supplierModel->allWithMeta();
@@ -57,10 +53,6 @@ class SupplierController
             'transport'  => 'Vận chuyển',
             'ticket'     => 'Vé tham quan',
             'insurance'  => 'Bảo hiểm',
-            'guide'      => 'Hướng dẫn viên',
-            'meal'       => 'Ăn uống',
-            'entertain'  => 'Giải trí',
-            'other'      => 'Dịch vụ khác',
         ];
         $supplier = null;
         require __DIR__ . '/../views/suppliers/form.php';
@@ -81,17 +73,20 @@ class SupplierController
 
         $errors = [];
         if ($data['name'] === '') $errors['name'] = 'Vui lòng nhập tên nhà cung cấp';
-        if ($data['service_type'] === '') $errors['service_type'] = 'Vui lòng chọn loại dịch vụ';
+        $allowed = ['hotel','restaurant','transport','ticket','insurance'];
+        if ($data['service_type'] === '' || !in_array($data['service_type'], $allowed, true)) {
+            $errors['service_type'] = 'Loại dịch vụ không hợp lệ';
+        }
 
         if (!empty($errors)) {
-            $_SESSION['errors'] = $errors;
-            $_SESSION['old'] = $_POST;
+            flash('errors', $errors);
+            flash('old', $_POST);
             header('Location: ' . BASE_URL . '?r=suppliers_create');
             exit;
         }
 
         $ok = $this->supplierModel->create($data);
-        $_SESSION['flash_success'] = $ok ? 'Đã thêm nhà cung cấp' : 'Không thể thêm nhà cung cấp';
+        flash_set($ok ? 'success' : 'danger', $ok ? 'Đã thêm nhà cung cấp' : 'Không thể thêm nhà cung cấp');
         header('Location: ' . BASE_URL . '?r=suppliers');
         exit;
     }
@@ -110,10 +105,6 @@ class SupplierController
             'transport'  => 'Vận chuyển',
             'ticket'     => 'Vé tham quan',
             'insurance'  => 'Bảo hiểm',
-            'guide'      => 'Hướng dẫn viên',
-            'meal'       => 'Ăn uống',
-            'entertain'  => 'Giải trí',
-            'other'      => 'Dịch vụ khác',
         ];
         require __DIR__ . '/../views/suppliers/form.php';
     }
@@ -131,8 +122,12 @@ class SupplierController
             'description' => trim($_POST['description'] ?? ''),
             'is_active' => (int)($_POST['is_active'] ?? 1),
         ];
+        $allowed = ['hotel','restaurant','transport','ticket','insurance'];
+        if (!in_array($data['service_type'], $allowed, true)) {
+            $data['service_type'] = 'hotel';
+        }
         $ok = $this->supplierModel->update($id, $data);
-        $_SESSION['flash_success'] = $ok ? 'Đã cập nhật nhà cung cấp' : 'Không thể cập nhật nhà cung cấp';
+        flash_set($ok ? 'success' : 'danger', $ok ? 'Đã cập nhật nhà cung cấp' : 'Không thể cập nhật nhà cung cấp');
         header('Location: ' . BASE_URL . '?r=suppliers');
         exit;
     }
@@ -142,9 +137,9 @@ class SupplierController
         $id = (int)$id;
         try {
             $this->supplierModel->delete($id);
-            $_SESSION['flash_success'] = 'Đã xóa nhà cung cấp';
+            flash_set('warning', 'Đã xóa nhà cung cấp');
         } catch (Exception $e) {
-            $_SESSION['flash_error'] = 'Không thể xóa nhà cung cấp: ' . $e->getMessage();
+            flash_set('danger', 'Không thể xóa nhà cung cấp: ' . $e->getMessage());
         }
         header('Location: ' . BASE_URL . '?r=suppliers');
         exit;

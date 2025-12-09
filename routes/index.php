@@ -19,6 +19,9 @@ require_once __DIR__ . '/../controllers/GuideAssignmentController.php';
 require_once __DIR__ . '/../controllers/GuideScheduleController.php';
 require_once __DIR__ . '/../controllers/GuideRatingController.php';
 require_once __DIR__ . '/../controllers/QRCodeController.php';
+require_once __DIR__ . '/../controllers/ReportsController.php';
+require_once __DIR__ . '/../controllers/GuidePortalController.php';
+require_once __DIR__ . '/../controllers/TourLogsController.php';
 
 $catController = new TourCategoryController();
 $adminController = new AdminController();
@@ -35,6 +38,9 @@ $guideAssignmentController = new GuideAssignmentController();
 $guideScheduleController = new GuideScheduleController();
 $guideRatingController = new GuideRatingController();
 $qrController = new QRCodeController();
+$reportsController = new ReportsController();
+$guidePortalController = new GuidePortalController();
+$tourLogsController2 = new TourLogsController();
 $bookingController = new BookingController();
 
 switch ($route) {
@@ -66,6 +72,8 @@ switch ($route) {
     case 'tours_update':
         if ($method === 'POST') $tourController->update($_GET['id'] ?? 0);
         break;
+    case 'tour_suppliers_json':
+        $tourController->suppliersJson(); break;
     case 'tours_delete':
         $tourController->delete($_GET['id'] ?? 0); break;
     case 'tours_itinerary':
@@ -79,6 +87,9 @@ switch ($route) {
     case 'tours_itinerary_delete':
         if ($method === 'POST') $tourController->itinerary_delete_item($_POST['id'] ?? 0, $_POST['tour_id'] ?? 0);
         break;
+
+    case 'tours_show':
+        $tourController->show($_GET['id'] ?? 0); break;
 
     case 'suppliers':
         $supplierController->index(); break;
@@ -127,6 +138,8 @@ switch ($route) {
         if ($method === 'POST') $authController->handleAdminLogin(); break;
     case 'admin_logout':
         $authController->adminLogout(); break;
+    case 'admin_profile':
+        $adminController->profile(); break;
 
     case 'staff':
         $staffController->index(); break;
@@ -171,6 +184,12 @@ switch ($route) {
         $tourLogController->edit($_GET['id'] ?? 0); break;
     case 'tour_logs_delete':
         $tourLogController->delete($_GET['id'] ?? 0); break;
+    case 'tour_logs_store':
+        if ($method === 'POST') $tourLogsController2->store(); break;
+    case 'tour_logs_update':
+        if ($method === 'POST') $tourLogsController2->update(); break;
+    case 'tour_logs_export':
+        $tourLogController->export(); break;
 
     // Booking
     case "booking":
@@ -197,12 +216,55 @@ switch ($route) {
         $bookingController->cancel(); break;
     case 'booking_guest_checkin':
         $bookingController->guestCheckin(); break;
+    case 'booking_guest_noshow':
+        $bookingController->guestNoShow(); break;
+    case 'booking_group_checkin':
+        $bookingController->groupCheckin(); break;
+    case 'booking_group_noshow':
+        $bookingController->groupNoShow(); break;
+    case 'booking_manifest':
+        $bookingController->manifest(); break;
+    case 'booking_supplier_confirm':
+        if ($method === 'POST') $bookingController->supplierServiceConfirm(); break;
+    case 'booking_supplier_remind':
+        if ($method === 'POST') $bookingController->supplierServiceRemind(); break;
+    case 'tour_manifest':
+        require __DIR__ . '/../views/booking/manifest_departure.php'; break;
+    case 'departure_group_checkin':
+        $bookingController->departureGroupCheckin(); break;
+    case 'departure_group_noshow':
+        $bookingController->departureGroupNoShow(); break;
+    case 'departure_group_pending':
+        $bookingController->departureGroupPending(); break;
+    case 'guest_checkin_history':
+        $bookingController->guestCheckinHistory(); break;
+    case 'tour_manifest_export':
+        $bookingController->manifestDepartureExport(); break;
     case 'booking_send_email':
         $bookingController->sendEmail(); break;
     case 'booking_pdf':
         $bookingController->pdf(); break;
     case 'qr':
         $qrController->generate(); break;
+    case 'qr_scan':
+        require __DIR__ . '/../views/qr/scan.php'; break;
+    case 'reports_profit':
+        $reportsController->profit(); break;
+    case 'reports_profit_detail':
+        $reportsController->profitDetail(); break;
+    case 'reports_profit_export':
+        $reportsController->export(); break;
+    case 'reports_debts':
+        $reportsController->debts(); break;
+    case 'reports_debts_export':
+        $reportsController->debtsExport(); break;
+    case 'guide_portal':
+        $guidePortalController->index(); break;
+    case 'guide_portal_customers':
+        $guidePortalController->customers(); break;
+    case 'guide_portal_update_guest_note':
+        if ($method === 'POST') $guidePortalController->updateGuestNote(); else { header('HTTP/1.1 405 Method Not Allowed'); echo 'method_not_allowed'; }
+        break;
     case 'booking_assign_room':
         if ($method === 'POST') $bookingController->assignRoom(); break;
     case 'booking_unassign_room':
@@ -215,6 +277,8 @@ switch ($route) {
         $paymentController->create($_GET['id'] ?? 0); break;
     case 'payments':
         $paymentController->index(); break;
+    case 'booking_payment_history':
+        $paymentController->bookingPaymentHistory(); break;
     case 'payments_create':
         $paymentController->create(); break;
     case 'payments_store':
@@ -225,6 +289,8 @@ switch ($route) {
         if ($method === 'POST') $paymentController->update($_GET['id'] ?? 0); break;
     case 'payments_delete':
         $paymentController->delete($_GET['id'] ?? 0); break;
+    case 'payments_refund':
+        if ($method === 'POST') $paymentController->refund($_GET['id'] ?? 0); break;
 
     // Cancellation Policies
     case 'cancellation_policies':

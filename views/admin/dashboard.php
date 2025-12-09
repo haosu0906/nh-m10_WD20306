@@ -28,16 +28,26 @@
 </head>
 <body>
   <?php 
-    $m = $metrics ?? ['mtdRevenue'=>128450,'newBookingsToday'=>37,'activeTours'=>124,'pendingIssues'=>9];
+    require_once __DIR__ . '/../../assets/configs/env.php';
+    $pdo = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME, DB_USERNAME, DB_PASSWORD, DB_OPTIONS);
+    $start = $_GET['start'] ?? null;
+    $end = $_GET['end'] ?? null;
+    if (!$start || !$end) { $start = date('Y-m-01'); $end = date('Y-m-t'); }
+    $stmtRevenue = $pdo->prepare("SELECT COALESCE(SUM(p.amount),0) FROM payments p WHERE p.status='completed' AND p.payment_date BETWEEN ? AND ?");
+    $stmtRevenue->execute([$start, $end]);
+    $totalRevenue = (float)$stmtRevenue->fetchColumn();
+    $totalBookings = (int)$pdo->query('SELECT COUNT(*) FROM bookings')->fetchColumn();
+    $activeTours = (int)$pdo->query("SELECT COUNT(*) FROM tours WHERE status = 'active'")->fetchColumn();
+    if ($activeTours === 0) { $activeTours = (int)$pdo->query('SELECT COUNT(*) FROM tours')->fetchColumn(); }
+    $pendingIssues = (int)$pdo->query("SELECT COUNT(*) FROM bookings WHERE booking_status = 'pending'")->fetchColumn();
     $recent = $recentBookings ?? [
       ['id'=>'BK-10453','customer_name'=>'Nguyễn Minh Anh','customer_phone'=>'+84 912 345 678','tour_title'=>'Hà Nội – Sapa 3N2Đ','date_booked'=>'2025-12-04','amount'=>420,'booking_status'=>'pending','status'=>'pending'],
       ['id'=>'BK-10454','customer_name'=>'Trần Hải Yến','customer_phone'=>'+84 935 222 111','tour_title'=>'Đà Nẵng – Hội An 2N1Đ','date_booked'=>'2025-12-05','amount'=>310.5,'booking_status'=>'deposit','status'=>'deposit'],
       ['id'=>'BK-10455','customer_name'=>'Phạm Đức Long','customer_phone'=>'+84 907 888 777','tour_title'=>'Phú Quốc – Nghỉ dưỡng 4N3Đ','date_booked'=>'2025-12-06','amount'=>899,'booking_status'=>'completed','status'=>'completed'],
     ];
-    $fmtRevenue = function($v){ return '$' . number_format((float)$v, 2); };
+    $fmtCurrency = function($v){ return number_format((float)$v, 0, ',', '.') . ' VNĐ'; };
     $label = function($row){ $s = $row['booking_status'] ?? $row['status'] ?? 'pending'; $map = ['pending'=>['Pending','warning'], 'deposit'=>['Deposited','success'], 'completed'=>['Completed','secondary'], 'canceled'=>['Cancelled','danger'], 'cancelled'=>['Cancelled','danger']]; return $map[$s] ?? ['Pending','warning']; };
   ?>
-  <?php require_once __DIR__ . '/../../assets/configs/env.php'; ?>
   <?php $current_page='home'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
 
   <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
@@ -55,9 +65,9 @@
               <div class="d-flex align-items-center gap-3">
                 <div class="metric-icon primary"><i class="fa-solid fa-sack-dollar"></i></div>
                 <div>
-                  <div class="metric-title">Total Revenue</div>
-                  <div class="metric-value"><?= $fmtRevenue($m['mtdRevenue'] ?? 0) ?></div>
-                  <div class="metric-sub"><span class="text-success"><i class="fa-solid fa-arrow-up"></i> 5.2%</span> vs last week</div>
+                <div class="metric-title">Total Revenue</div>
+                <div class="metric-value"><?= $fmtCurrency($totalRevenue) ?></div>
+                <div class="metric-sub">Theo payments đã hoàn tất</div>
                 </div>
               </div>
               <div class="text-secondary small">MTD</div>
@@ -69,9 +79,9 @@
             <div class="d-flex align-items-center gap-3">
               <div class="metric-icon success"><i class="fa-solid fa-ticket"></i></div>
               <div>
-                <div class="metric-title">New Bookings (Today)</div>
-                <div class="metric-value"><?= (int)($m['newBookingsToday'] ?? 0) ?></div>
-                <div class="metric-sub"><span class="text-success"><i class="fa-solid fa-arrow-up"></i> 12%</span> vs yesterday</div>
+                <div class="metric-title">Total Bookings</div>
+                <div class="metric-value"><?= $totalBookings ?></div>
+                <div class="metric-sub">Toàn bộ hệ thống</div>
               </div>
             </div>
           </div>
@@ -82,8 +92,8 @@
               <div class="metric-icon warning"><i class="fa-solid fa-route"></i></div>
               <div>
                 <div class="metric-title">Active Tours</div>
-                <div class="metric-value"><?= (int)($m['activeTours'] ?? 0) ?></div>
-                <div class="metric-sub">Across 18 destinations</div>
+                <div class="metric-value"><?= $activeTours ?></div>
+                <div class="metric-sub">Đang hoạt động</div>
               </div>
             </div>
           </div>
@@ -94,13 +104,15 @@
               <div class="metric-icon danger"><i class="fa-solid fa-triangle-exclamation"></i></div>
               <div>
                 <div class="metric-title">Pending Issues</div>
-                <div class="metric-value"><?= (int)($m['pendingIssues'] ?? 0) ?></div>
-                <div class="metric-sub">Payments & cancellations</div>
+                <div class="metric-value <?= $pendingIssues>0 ? 'text-danger' : '' ?>"><?= $pendingIssues ?></div>
+                <div class="metric-sub">Bookings chờ xử lý</div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      
 
       <div class="row g-3 mt-2">
         <div class="col-12">
@@ -141,7 +153,7 @@
                       </td>
                       <td><?= htmlspecialchars($r['tour_title'] ?? '—') ?></td>
                       <td><?= htmlspecialchars(isset($r['date_booked']) ? date('d/m/Y', strtotime($r['date_booked'])) : '—') ?></td>
-                      <td class="text-end"><?= $fmtRevenue($r['amount'] ?? 0) ?></td>
+                      <td class="text-end"><?= $fmtCurrency($r['amount'] ?? 0) ?></td>
                       <td><span class="badge bg-<?= $badgeClass ?><?= $badgeClass==='warning'?' text-dark':'' ?>"><?= $badgeText ?></span></td>
                       <td class="text-center action-group">
                         <a class="btn btn-light btn-sm" title="View" href="#"><i class="fa-regular fa-eye"></i></a>
@@ -164,6 +176,8 @@
           </div>
         </div>
       </div>
+
+      
 
     </div>
   </div>

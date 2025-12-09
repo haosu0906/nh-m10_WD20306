@@ -17,20 +17,20 @@ class PaymentController
     public function index()
     {
         $bookingId = (int)($_GET['booking_id'] ?? 0);
-        $sql = "SELECT p.*, b.id AS booking_code, t.title AS tour_title
+        $createdBy = (int)($_GET['created_by'] ?? 0);
+        $sql = "SELECT p.*, b.id AS booking_code, t.title AS tour_title, u.full_name AS created_by_name
                 FROM payments p
                 LEFT JOIN bookings b ON p.booking_id = b.id
-                LEFT JOIN tours t ON b.tour_id = t.id";
-        if ($bookingId > 0) {
-            $sql .= " WHERE p.booking_id = :bid";
-        }
+                LEFT JOIN tours t ON b.tour_id = t.id
+                LEFT JOIN users u ON p.created_by = u.id";
+        $conds = [];
+        $params = [];
+        if ($bookingId > 0) { $conds[] = 'p.booking_id = :bid'; $params['bid'] = $bookingId; }
+        if ($createdBy > 0) { $conds[] = 'p.created_by = :cb'; $params['cb'] = $createdBy; }
+        if (!empty($conds)) { $sql .= ' WHERE ' . implode(' AND ', $conds); }
         $sql .= " ORDER BY p.payment_date DESC";
         $stmt = $this->pdo->prepare($sql);
-        if ($bookingId > 0) {
-            $stmt->execute(['bid' => $bookingId]);
-        } else {
-            $stmt->execute();
-        }
+        $stmt->execute($params);
         $payments = $stmt->fetchAll();
 
         // Lấy danh sách booking cho bộ lọc
@@ -75,6 +75,11 @@ class PaymentController
     public function store()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+        if (!csrf_validate($_POST['csrf_token'] ?? '')) {
+            flash_set('danger', 'CSRF token không hợp lệ.');
+            header('Location: ' . BASE_URL . '?r=payments_create');
+            exit;
+        }
 
         $bookingId = (int)($_POST['booking_id'] ?? 0);
         $amount = (float)($_POST['amount'] ?? 0);
@@ -104,8 +109,9 @@ class PaymentController
         // Lưu thông báo vào session để hiển thị
         $_SESSION['payment_message'] = $updateResult['message'];
         $_SESSION['payment_status'] = $updateResult['success'] ? 'success' : 'danger';
+        flash_set($updateResult['success'] ? 'success' : 'danger', $updateResult['message']);
 
-        header('Location: ' . BASE_URL . '?r=payments' . ($bookingId ? '?booking_id=' . $bookingId : ''));
+        header('Location: ' . BASE_URL . '?r=booking_detail&id=' . $bookingId);
         exit;
     }
 
@@ -140,6 +146,11 @@ class PaymentController
     public function update($id = 0)
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+        if (!csrf_validate($_POST['csrf_token'] ?? '')) {
+            flash_set('danger', 'CSRF token không hợp lệ.');
+            header('Location: ' . BASE_URL . '?r=payments_edit&id=' . (int)$id);
+            exit;
+        }
         $id = (int)$id;
 
         $bookingId = (int)($_POST['booking_id'] ?? 0);
@@ -171,14 +182,63 @@ class PaymentController
         // Lưu thông báo vào session để hiển thị
         $_SESSION['payment_message'] = $updateResult['message'];
         $_SESSION['payment_status'] = $updateResult['success'] ? 'success' : 'danger';
+        flash_set($updateResult['success'] ? 'success' : 'danger', $updateResult['message']);
 
-        header('Location: ' . BASE_URL . '?r=payments' . ($bookingId ? '?booking_id=' . $bookingId : ''));
+        header('Location: ' . BASE_URL . '?r=booking_detail&id=' . $bookingId);
+        exit;
+    }
+
+    // Hoàn tiền (đổi trạng thái payment thành refunded)
+    public function refund($id = 0)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+        if (!csrf_validate($_POST['csrf_token'] ?? '')) {
+            flash_set('danger', 'CSRF token không hợp lệ.');
+            header('Location: ' . BASE_URL . '?r=payments');
+            exit;
+        }
+        $id = (int)$id;
+        // Lấy payment
+        $stmt = $this->pdo->prepare("SELECT * FROM payments WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        $payment = $stmt->fetch();
+        if (!$payment) {
+            flash_set('danger', 'Không tìm thấy payment.');
+            header('Location: ' . BASE_URL . '?r=payments');
+            exit;
+        }
+        // Chỉ cho phép refund nếu đang completed
+        if (($payment['status'] ?? '') !== 'completed') {
+            flash_set('danger', 'Chỉ hoàn tiền cho giao dịch hoàn tất.');
+            header('Location: ' . BASE_URL . '?r=payments_edit&id=' . $id);
+            exit;
+        }
+        // Cập nhật trạng thái thành refunded, lưu ghi chú nếu có
+        $notes = trim((string)($_POST['notes'] ?? ''));
+        $stmtU = $this->pdo->prepare("UPDATE payments SET status = 'refunded', notes = :notes WHERE id = :id");
+        $stmtU->execute(['notes' => $notes !== '' ? $notes : ($payment['notes'] ?? ''), 'id' => $id]);
+
+        // Cập nhật trạng thái booking sau refund
+        $bookingId = (int)($payment['booking_id'] ?? 0);
+        if ($bookingId > 0) {
+            $updateResult = $this->paymentService->updateBookingStatusAfterPayment($bookingId);
+            $_SESSION['payment_message'] = 'Đã hoàn tiền giao dịch #' . $id . '. ' . ($updateResult['message'] ?? '');
+            $_SESSION['payment_status'] = $updateResult['success'] ? 'success' : 'danger';
+            flash_set($updateResult['success'] ? 'success' : 'danger', 'Đã hoàn tiền giao dịch #' . $id . '. ' . ($updateResult['message'] ?? ''));
+        }
+
+        header('Location: ' . BASE_URL . '?r=booking_payment_history&booking_id=' . $bookingId);
         exit;
     }
 
     // Xóa thanh toán
     public function delete($id = 0)
     {
+        if (!csrf_validate($_GET['csrf_token'] ?? '')) {
+            flash_set('danger', 'CSRF token không hợp lệ.');
+            header('Location: ' . BASE_URL . '?r=payments');
+            exit;
+        }
         $id = (int)$id;
         $stmt = $this->pdo->prepare("SELECT booking_id FROM payments WHERE id = :id");
         $stmt->execute(['id' => $id]);
@@ -194,9 +254,10 @@ class PaymentController
             // Lưu thông báo vào session để hiển thị
             $_SESSION['payment_message'] = $updateResult['message'];
             $_SESSION['payment_status'] = $updateResult['success'] ? 'success' : 'danger';
+            flash_set($updateResult['success'] ? 'success' : 'danger', $updateResult['message']);
         }
 
-        header('Location: ' . BASE_URL . '?r=payments' . ($payment ? '?booking_id=' . $payment['booking_id'] : ''));
+        header('Location: ' . BASE_URL . '?r=booking_detail&id=' . (int)($payment['booking_id'] ?? 0));
         exit;
     }
 

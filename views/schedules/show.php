@@ -21,6 +21,12 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3 class="mb-0">Chi tiết Lịch khởi hành</h3>
                 <div class="d-flex gap-2">
+                    <a href="<?= BASE_URL ?>?r=tour_manifest&departure_id=<?= (int)$schedule['id'] ?>" class="btn btn-secondary">
+                        <i class="fas fa-clipboard-list me-1"></i> Danh sách đoàn
+                    </a>
+                    <a href="<?= BASE_URL ?>?r=qr_scan&departure_id=<?= (int)$schedule['id'] ?>" class="btn btn-outline-primary">
+                        <i class="fas fa-qrcode me-1"></i> Quét QR
+                    </a>
                     <a href="<?= BASE_URL ?>?r=schedules_edit&id=<?= (int)$schedule['id'] ?>" class="btn btn-outline-primary">
                         <i class="fas fa-edit me-1"></i> Sửa
                     </a>

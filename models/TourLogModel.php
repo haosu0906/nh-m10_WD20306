@@ -33,6 +33,36 @@ class TourLogModel extends BaseModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function search($guideUserId = null, $tourId = null, $from = null, $to = null)
+    {
+        $sql = "SELECT tl.*, t.title AS tour_title, u.full_name AS guide_name
+                FROM tour_logs tl
+                JOIN tours t ON tl.tour_id = t.id
+                LEFT JOIN users u ON tl.guide_user_id = u.id
+                WHERE 1=1";
+        $params = [];
+        if (!empty($guideUserId)) {
+            $sql .= " AND tl.guide_user_id = :gid";
+            $params[':gid'] = (int)$guideUserId;
+        }
+        if (!empty($tourId)) {
+            $sql .= " AND tl.tour_id = :tid";
+            $params[':tid'] = (int)$tourId;
+        }
+        if (!empty($from)) {
+            $sql .= " AND tl.log_date >= :from";
+            $params[':from'] = $from;
+        }
+        if (!empty($to)) {
+            $sql .= " AND tl.log_date <= :to";
+            $params[':to'] = $to;
+        }
+        $sql .= " ORDER BY tl.log_date DESC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function getByTour($tourId)
     {
         $sql = "SELECT tl.*, t.title AS tour_title

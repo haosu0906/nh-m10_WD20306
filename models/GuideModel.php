@@ -97,6 +97,36 @@ class GuideModel extends BaseModel
 
     public function create($data)
     {
+        try {
+            $st = $this->pdo->prepare("SHOW TABLES LIKE ?");
+            $st->execute([$this->info_table]);
+            if ($st->rowCount() > 0) {
+                $u = $this->pdo->prepare("INSERT INTO users (full_name, email, phone, password, role) VALUES (?, ?, ?, ?, 'guide')");
+                $u->execute([
+                    $data['full_name'] ?? '',
+                    $data['email'] ?? '',
+                    $data['phone'] ?? '',
+                    password_hash($data['password'] ?? '123456', PASSWORD_DEFAULT)
+                ]);
+                $uid = (int)$this->pdo->lastInsertId();
+                $gi = $this->pdo->prepare("INSERT INTO {$this->info_table} (user_id, identity_no, guide_type, certificate_no, languages, experience_years, specialized_route, health_status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $gi->execute([
+                    $uid,
+                    $data['identity_no'] ?? null,
+                    $data['guide_type'] ?? 'domestic',
+                    $data['certificate_no'] ?? '',
+                    $data['languages'] ?? '',
+                    (int)($data['experience_years'] ?? 0),
+                    $data['specialized_route'] ?? '',
+                    $data['health_status'] ?? '',
+                    $data['notes'] ?? ''
+                ]);
+                return;
+            }
+        } catch (PDOException $e) {
+            if (strpos($e->getMessage(), "doesn't exist") === false) { throw $e; }
+        }
+
         $stmt = $this->pdo->prepare("INSERT INTO {$this->table_name}
             (full_name, phone, email, identity_no, certificate_no, guide_type, avatar, notes)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -114,6 +144,35 @@ class GuideModel extends BaseModel
 
     public function update($id, $data)
     {
+        try {
+            $st = $this->pdo->prepare("SHOW TABLES LIKE ?");
+            $st->execute([$this->info_table]);
+            if ($st->rowCount() > 0) {
+                $row = $this->find($id);
+                $uid = (int)($row['user_id'] ?? 0);
+                if ($uid > 0) {
+                    $up = $this->pdo->prepare("UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?");
+                    $up->execute([
+                        $data['full_name'] ?? ($row['full_name'] ?? ''),
+                        $data['email'] ?? ($row['email'] ?? ''),
+                        $data['phone'] ?? ($row['phone'] ?? ''),
+                        $uid
+                    ]);
+                }
+                $gi = $this->pdo->prepare("UPDATE {$this->info_table} SET identity_no = :identity_no, guide_type = :guide_type, certificate_no = :certificate_no, notes = :notes WHERE id = :id");
+                $gi->execute([
+                    ':identity_no' => $data['identity_no'] ?? ($row['identity_no'] ?? ''),
+                    ':guide_type' => $data['guide_type'] ?? ($row['guide_type'] ?? 'domestic'),
+                    ':certificate_no' => $data['certificate_no'] ?? ($row['certificate_no'] ?? ''),
+                    ':notes' => $data['notes'] ?? ($row['notes'] ?? ''),
+                    ':id' => (int)$id
+                ]);
+                return;
+            }
+        } catch (PDOException $e) {
+            if (strpos($e->getMessage(), "doesn't exist") === false) { throw $e; }
+        }
+
         $fields = [
             'full_name' => $data['full_name'] ?? '',
             'phone' => $data['phone'] ?? '',

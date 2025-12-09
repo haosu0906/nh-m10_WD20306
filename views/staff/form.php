@@ -2,8 +2,8 @@
 
 require_once __DIR__ . '/../../assets/configs/env.php';
 
-$editing = isset($guide) && !empty($guide);
-$title = $editing ? 'Sửa Hướng Dẫn Viên' : 'Thêm Hướng Dẫn Viên';
+$editing = isset($staff) && !empty($staff);
+$title = $editing ? 'Sửa Nhân Sự' : 'Thêm Nhân Sự';
 ?>
 <!doctype html>
 <html lang="vi">
@@ -13,78 +13,13 @@ $title = $editing ? 'Sửa Hướng Dẫn Viên' : 'Thêm Hướng Dẫn Viên';
     <title><?= $title ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
-    <style>
-    :root {
-        --accent: #667eea;
-        --accent-dark: #5568d3
-    }
-
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 200px;
-        padding: 20px;
-        background: linear-gradient(180deg, var(--accent), #764ba2);
-        color: #fff;
-        overflow: auto
-    }
-
-    .sidebar h3 {
-        font-weight: 700;
-        margin-bottom: 1rem;
-        text-align: center;
-        font-size: 16px
-    }
-
-    .nav-link {
-        color: rgba(255, 255, 255, .95);
-        display: flex;
-        align-items: center;
-        gap: .6rem;
-        padding: .6rem;
-        border-radius: .5rem;
-        text-decoration: none
-    }
-
-    .nav-link:hover,
-    .nav-link.active {
-        background: rgba(255, 255, 255, .1)
-    }
-
-    .main {
-        margin-left: 200px;
-        padding: 86px 22px 22px
-    }
-    </style>
+    <link href="<?= BASE_URL ?>assets/css/modern-ui.css" rel="stylesheet" />
 </head>
 
 <body>
-    <div class="sidebar">
-        <h3><i class="fas fa-map-marked-alt"></i> Quản trị Tripmate</h3>
-        <nav class="nav flex-column">
-            <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=tour_categories"><i class="fas fa-layer-group"></i> Danh mục tour</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=suppliers"><i class="fas fa-handshake"></i> Nhà cung cấp</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_assignments"><i class="fas fa-user-check"></i> Phân công HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_schedules"><i class="fas fa-calendar-alt"></i> Lịch HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_ratings"><i class="fas fa-star"></i> Đánh giá HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
-            <a class="nav-link active" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân Sự</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_login">
-                <i class="fas fa-door-open"></i> Portal HDV
-            </a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=admin_login">
-                <i class="fas fa-user-shield"></i> Đăng nhập Admin
-            </a>
-        </nav>
-    </div>
+    <?php $current_page='staff'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
     <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
-    <main class="main">
+    <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3><?= $title ?></h3>
             <a href="<?= BASE_URL ?>?r=staff" class="btn btn-secondary">
@@ -103,15 +38,16 @@ $title = $editing ? 'Sửa Hướng Dẫn Viên' : 'Thêm Hướng Dẫn Viên';
         <div class="card">
             <div class="card-body">
                 <form method="post" enctype="multipart/form-data"
-                    action="<?= $editing ? BASE_URL . '?r=staff_update&id='.$guide['id'] : BASE_URL . '?r=staff_store' ?>">
+                    action="<?= $editing ? BASE_URL . '?r=staff_update&id=' . (int)$staff['id'] : BASE_URL . '?r=staff_store' ?>">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                     
                     <!-- Avatar Upload -->
                     <div class="row mb-4">
                         <div class="col-md-3">
                             <label class="form-label">Avatar</label>
                             <div class="text-center">
-                                <?php if ($editing && !empty($guide['avatar']) && file_exists($guide['avatar'])): ?>
-                                    <img src="<?= BASE_URL . $guide['avatar'] ?>" alt="Avatar" class="rounded-circle mb-2" style="width: 120px; height: 120px; object-fit: cover;">
+                                <?php if ($editing && !empty($staff['avatar']) && file_exists($staff['avatar'])): ?>
+                                    <img src="<?= BASE_URL . $staff['avatar'] ?>" alt="Avatar" class="rounded-circle mb-2" style="width: 120px; height: 120px; object-fit: cover;">
                                 <?php else: ?>
                                     <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 120px; height: 120px; font-size: 3rem;">
                                         <i class="fas fa-user-tie"></i>
@@ -126,22 +62,22 @@ $title = $editing ? 'Sửa Hướng Dẫn Viên' : 'Thêm Hướng Dẫn Viên';
                                 <div class="col-md-6">
                                     <label class="form-label">Họ tên <span class="text-danger">*</span></label>
                                     <input class="form-control" type="text" name="full_name" required
-                                        value="<?= $editing ? htmlspecialchars($guide['full_name']) : '' ?>">
+                                        value="<?= $editing ? htmlspecialchars($staff['full_name']) : '' ?>">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Email <span class="text-danger">*</span></label>
                                     <input class="form-control" type="email" name="email" required
-                                        value="<?= $editing ? htmlspecialchars($guide['email']) : '' ?>">
+                                        value="<?= $editing ? htmlspecialchars($staff['email']) : '' ?>">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">SĐT <span class="text-danger">*</span></label>
                                     <input class="form-control" type="tel" name="phone" required
-                                        value="<?= $editing ? htmlspecialchars($guide['phone']) : '' ?>">
+                                        value="<?= $editing ? htmlspecialchars($staff['phone']) : '' ?>">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">CMND/CCCD</label>
                                     <input class="form-control" type="text" name="identity_no"
-                                        value="<?= $editing ? htmlspecialchars($guide['identity_no'] ?? '') : '' ?>">
+                                        value="<?= $editing ? htmlspecialchars($staff['identity_no'] ?? '') : '' ?>">
                                 </div>
                             </div>
                         </div>
@@ -153,38 +89,38 @@ $title = $editing ? 'Sửa Hướng Dẫn Viên' : 'Thêm Hướng Dẫn Viên';
                         <div class="col-md-4">
                             <label class="form-label">Loại HDV</label>
                             <select class="form-select" name="guide_type">
-                                <option value="domestic" <?= $editing && $guide['guide_type'] == 'domestic' ? 'selected' : '' ?>>🏠 Nội địa</option>
-                                <option value="international" <?= $editing && $guide['guide_type'] == 'international' ? 'selected' : '' ?>>🌏 Quốc tế</option>
+                                <option value="domestic" <?= $editing && ($staff['guide_type'] ?? '') == 'domestic' ? 'selected' : '' ?>>🏠 Nội địa</option>
+                                <option value="international" <?= $editing && ($staff['guide_type'] ?? '') == 'international' ? 'selected' : '' ?>>🌏 Quốc tế</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Số chứng chỉ</label>
-                            <input class="form-control" type="text" name="certificate_no"
-                                value="<?= $editing ? htmlspecialchars($guide['certificate_no'] ?? '') : '' ?>">
+                                <input class="form-control" type="text" name="certificate_no"
+                                    value="<?= $editing ? htmlspecialchars($staff['certificate_no'] ?? '') : '' ?>">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Kinh nghiệm (năm)</label>
-                            <input class="form-control" type="number" name="experience_years" min="0"
-                                value="<?= $editing ? htmlspecialchars($guide['experience_years'] ?? 0) : 0 ?>">
+                                <input class="form-control" type="number" name="experience_years" min="0"
+                                    value="<?= $editing ? htmlspecialchars($staff['experience_years'] ?? 0) : 0 ?>">
                         </div>
                         <div class="col-12">
                             <label class="form-label">Ngôn ngữ</label>
-                            <input class="form-control" type="text" name="languages" placeholder="Ví dụ: Tiếng Việt, English, 中文"
-                                value="<?= $editing ? htmlspecialchars($guide['languages'] ?? '') : '' ?>">
+                                <input class="form-control" type="text" name="languages" placeholder="Ví dụ: Tiếng Việt, English, 中文"
+                                    value="<?= $editing ? htmlspecialchars($staff['languages'] ?? '') : '' ?>">
                         </div>
                         <div class="col-12">
                             <label class="form-label">Tuyến chuyên</label>
-                            <input class="form-control" type="text" name="specialized_route" placeholder="Ví dụ: Miền Bắc Việt Nam, Đông Nam Á"
-                                value="<?= $editing ? htmlspecialchars($guide['specialized_route'] ?? '') : '' ?>">
+                                <input class="form-control" type="text" name="specialized_route" placeholder="Ví dụ: Miền Bắc Việt Nam, Đông Nam Á"
+                                    value="<?= $editing ? htmlspecialchars($staff['specialized_route'] ?? '') : '' ?>">
                         </div>
                         <div class="col-12">
                             <label class="form-label">Tình trạng sức khỏe</label>
                             <textarea class="form-control" name="health_status" rows="2"
-                                placeholder="Ví dụ: Sức khỏe tốt, không bệnh nền"><?= $editing ? htmlspecialchars($guide['health_status'] ?? '') : '' ?></textarea>
+                                placeholder="Ví dụ: Sức khỏe tốt, không bệnh nền"><?= $editing ? htmlspecialchars($staff['health_status'] ?? '') : '' ?></textarea>
                         </div>
                         <div class="col-12">
                             <label class="form-label">Ghi chú</label>
-                            <textarea class="form-control" name="notes" rows="2"><?= $editing ? htmlspecialchars($guide['notes'] ?? '') : '' ?></textarea>
+                            <textarea class="form-control" name="notes" rows="2"><?= $editing ? htmlspecialchars($staff['notes'] ?? '') : '' ?></textarea>
                         </div>
                     </div>
 
@@ -192,9 +128,9 @@ $title = $editing ? 'Sửa Hướng Dẫn Viên' : 'Thêm Hướng Dẫn Viên';
                     <div class="row">
                         <div class="col-md-6">
                             <label class="form-label">Trạng thái</label>
-                            <select class="form-select" name="is_active">
-                                <option value="1" <?= $editing && $guide['is_active'] ? 'selected' : '' ?>>✅ Hoạt động</option>
-                                <option value="0" <?= $editing && !$guide['is_active'] ? 'selected' : '' ?>>⏸️ Nghỉ</option>
+                            <select class="form-select" name="status">
+                                <option value="1" <?= $editing && ($staff['is_active'] ?? $staff['status'] ?? 1) ? 'selected' : '' ?>>✅ Hoạt động</option>
+                                <option value="0" <?= $editing && !($staff['is_active'] ?? $staff['status'] ?? 1) ? 'selected' : '' ?>>⏸️ Nghỉ</option>
                             </select>
                         </div>
                     </div>
@@ -211,6 +147,6 @@ $title = $editing ? 'Sửa Hướng Dẫn Viên' : 'Thêm Hướng Dẫn Viên';
                 </form>
             </div>
         </div>
-    </main>
+    </div>
 </body>
 </html>

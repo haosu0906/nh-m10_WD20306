@@ -62,6 +62,7 @@
         'hotel'       => 'Khách sạn',
         'restaurant'  => 'Nhà hàng',
         'transport'   => 'Vận chuyển',
+        'attraction'  => 'Điểm tham quan',
         'ticket'      => 'Vé tham quan',
         'insurance'   => 'Bảo hiểm',
         'guide'       => 'HDV',
@@ -73,7 +74,7 @@
     ?>
 
         <div class="mb-3">
-            <span class="badge bg-primary">Loại dịch vụ chính:
+            <span class="badge bg-primary">Dịch vụ chính:
                 <?= htmlspecialchars((string)$serviceLabel, ENT_QUOTES, 'UTF-8') ?></span>
         </div>
 

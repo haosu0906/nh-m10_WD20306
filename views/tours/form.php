@@ -208,6 +208,12 @@ $infantPrice = $old['infant_price'] ?? ($price['infant_price'] ?? 0);
                     <input type="url" name="cover_url" class="form-control"
                            value="<?= htmlspecialchars($old['cover_url'] ?? ($tour['cover_image'] ?? '')) ?>"
                            placeholder="https://...">
+                    <?php $currentCover = $tour['cover_image'] ?? ($tour['image'] ?? ''); $isExternal = preg_match('/^https?:\/\//i', (string)$currentCover); $coverSrc = $currentCover ? ($isExternal ? $currentCover : (BASE_ASSETS_UPLOADS . $currentCover)) : ''; ?>
+                    <?php if ($editing && $coverSrc !== ''): ?>
+                      <div class="mt-3">
+                        <img src="<?= $coverSrc ?>" alt="Cover hiện tại" class="img-fluid rounded" style="max-height:220px; object-fit:cover; border:1px solid #e5e7eb;">
+                      </div>
+                    <?php endif; ?>
                   </div>
                 </div>
                 <div class="col-12">
@@ -219,9 +225,12 @@ $infantPrice = $old['infant_price'] ?? ($price['infant_price'] ?? 0);
           </div>
 
           <div class="card shadow-sm mb-4">
-            <div class="card-header bg-light fw-bold">2. Lịch trình</div>
-            <div class="card-body">
-              <div class="row g-3 align-items-end">
+            <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
+              <span>2. Lịch trình</span>
+              <button type="button" class="btn btn-sm btn-outline-primary" id="add-it-row"><i class="fas fa-plus"></i> Thêm lịch trình</button>
+            </div>
+            <div class="card-body" id="it-container">
+              <div class="row g-3 align-items-end it-row">
                 <div class="col-md-1">
                   <label class="form-label fw-bold">Ngày</label>
                   <input type="number" name="it_item_day[]" class="form-control form-control-lg" min="1" value="1">
@@ -256,6 +265,9 @@ $infantPrice = $old['infant_price'] ?? ($price['infant_price'] ?? 0);
                   <label class="form-label fw-bold">Địa điểm</label>
                   <input type="text" name="it_item_location[]" class="form-control form-control-lg" placeholder="Tên địa điểm tham quan">
                 </div>
+                <div class="col-md-1 align-self-end d-none">
+                  <button type="button" class="btn btn-outline-danger w-100 it-remove">&times;</button>
+                </div>
               </div>
             </div>
           </div>
@@ -283,6 +295,76 @@ $infantPrice = $old['infant_price'] ?? ($price['infant_price'] ?? 0);
             </div>
           </div>
 
+          <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light fw-bold">4. Hình ảnh</div>
+            <div class="card-body">
+              <?php if (!empty($gallery)): ?>
+                <div class="row g-3 align-items-center">
+                  <?php foreach ($gallery as $img): ?>
+                    <div class="col-auto">
+                      <img src="<?= BASE_ASSETS_UPLOADS . $img['image_path'] ?>" alt="image" class="gallery-thumb border">
+                    </div>
+                    <div class="col-auto">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="remove_images[]" value="<?= (int)$img['id'] ?>" id="img<?= (int)$img['id'] ?>">
+                        <label class="form-check-label small" for="img<?= (int)$img['id'] ?>">Xóa ảnh này</label>
+                      </div>
+                    </div>
+                  <?php endforeach; ?>
+                </div>
+              <?php else: ?>
+                <div class="text-muted">Chưa có hình ảnh.</div>
+              <?php endif; ?>
+              <div class="mt-3">
+                <label class="form-label fw-bold">Thêm ảnh mới</label>
+                <input type="file" name="gallery[]" class="form-control" accept="image/*" multiple>
+              </div>
+            </div>
+          </div>
+
+          <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
+              <span>5. Nhà cung cấp dịch vụ cho Tour</span>
+              <button type="button" class="btn btn-sm btn-outline-primary" id="add-ts-row"><i class="fas fa-plus"></i> Thêm dịch vụ</button>
+            </div>
+            <div class="card-body" id="ts-container">
+              <?php 
+                $allowedServiceTypes = ['hotel'=>'Khách sạn','restaurant'=>'Nhà hàng','transport'=>'Vận chuyển','ticket'=>'Vé tham quan','insurance'=>'Bảo hiểm'];
+                $prefill = $tourSuppliers ?? [];
+                if (empty($prefill)) { $prefill = [['supplier_id'=>'','service_type'=>'','description'=>'']]; }
+                foreach ($prefill as $row):
+              ?>
+              <div class="row g-3 align-items-end ts-row mb-2">
+                <div class="col-md-4">
+                  <label class="form-label">Nhà cung cấp</label>
+                  <select name="ts_supplier_id[]" class="form-select">
+                    <option value="">-- Chọn NCC --</option>
+                    <?php foreach (($supplierMaster ?? []) as $s): ?>
+                      <option value="<?= (int)$s['id'] ?>" <?= ((string)($row['supplier_id'] ?? '') === (string)$s['id'])?'selected':'' ?>><?= htmlspecialchars($s['name']) ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Loại dịch vụ</label>
+                  <select name="ts_service_type[]" class="form-select">
+                    <option value="">-- Chọn loại --</option>
+                    <?php foreach ($allowedServiceTypes as $k=>$v): ?>
+                      <option value="<?= $k ?>" <?= (($row['service_type'] ?? '')===$k)?'selected':'' ?>><?= $v ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Mô tả</label>
+                  <input type="text" name="ts_description[]" class="form-control" value="<?= htmlspecialchars($row['description'] ?? '') ?>" placeholder="VD: khách sạn 3*, xe 45 chỗ...">
+                </div>
+                <div class="col-md-1">
+                  <button type="button" class="btn btn-outline-danger w-100 ts-remove">&times;</button>
+                </div>
+              </div>
+              <?php endforeach; ?>
+            </div>
+          </div>
+
           <div class="position-sticky bottom-0 bg-white border-top py-3">
             <div class="text-end">
               <button type="submit" class="btn btn-primary btn-lg">Lưu lại</button>
@@ -302,6 +384,61 @@ $infantPrice = $old['infant_price'] ?? ($price['infant_price'] ?? 0);
           nights.value = Math.max(0, v-1);
         });
       }
+    })();
+
+    // NCC dịch vụ động
+    (function(){
+      const container = document.getElementById('ts-container');
+      const addBtn = document.getElementById('add-ts-row');
+      if (!container || !addBtn) return;
+      addBtn.addEventListener('click', function(){
+        const rows = container.querySelectorAll('.ts-row');
+        const last = rows[rows.length - 1];
+        const clone = last.cloneNode(true);
+        // Reset inputs
+        clone.querySelectorAll('select, input').forEach(function(el){ if (el.tagName==='SELECT') { el.selectedIndex = 0; } else { el.value=''; } });
+        container.appendChild(clone);
+        attachRemove();
+      });
+      function attachRemove(){
+        container.querySelectorAll('.ts-remove').forEach(function(btn){
+          btn.onclick = function(){
+            const row = this.closest('.ts-row');
+            const count = container.querySelectorAll('.ts-row').length;
+            if (count > 1) { row.remove(); }
+          }
+        });
+      }
+      attachRemove();
+    })();
+    // Itinerary dynamic rows
+    (function(){
+      const container = document.getElementById('it-container');
+      const addBtn = document.getElementById('add-it-row');
+      if (!container || !addBtn) return;
+      addBtn.addEventListener('click', function(){
+        const rows = container.querySelectorAll('.it-row');
+        const last = rows[rows.length - 1];
+        const clone = last.cloneNode(true);
+        clone.querySelectorAll('select, input, textarea').forEach(function(el){
+          if (el.tagName === 'SELECT') { el.selectedIndex = 0; }
+          else { el.value = ''; }
+        });
+        const removeBtnCol = clone.querySelector('.it-remove');
+        if (removeBtnCol) { removeBtnCol.closest('.col-md-1').classList.remove('d-none'); }
+        container.appendChild(clone);
+        attachRemove();
+      });
+      function attachRemove(){
+        container.querySelectorAll('.it-remove').forEach(function(btn){
+          btn.onclick = function(){
+            const row = this.closest('.it-row');
+            const count = container.querySelectorAll('.it-row').length;
+            if (count > 1) { row.remove(); }
+          };
+        });
+      }
+      attachRemove();
     })();
     </script>
 </body>

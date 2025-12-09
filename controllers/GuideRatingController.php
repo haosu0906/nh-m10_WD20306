@@ -99,6 +99,16 @@ class GuideRatingController
             $guide = $stmt->fetch();
         }
 
+        // Danh sách guides để chọn nếu chưa có guide cụ thể
+        try {
+            $stmtG = $this->pdo->query("SELECT u.id, u.full_name 
+                                        FROM users u 
+                                        LEFT JOIN guides_info gi ON u.id = gi.user_id 
+                                        WHERE gi.user_id IS NOT NULL 
+                                        ORDER BY u.full_name ASC");
+            $guides = $stmtG->fetchAll();
+        } catch (PDOException $e) { $guides = []; }
+
         require __DIR__ . '/../views/guide_ratings/create_rating.php';
     }
 
@@ -127,7 +137,8 @@ class GuideRatingController
             ':rid' => $raterId
         ]);
         if ($stmt->fetch()) {
-            $_SESSION['flash_error'] = 'Bạn đã đánh giá HDV này cho booking này!';
+            require_once __DIR__ . '/../assets/helpers/flash.php';
+            flash_set('error', 'Bạn đã đánh giá HDV này cho booking này!');
             header('Location: ' . BASE_URL . '?r=guide_ratings_create&booking_id=' . $bookingId);
             exit;
         }
@@ -144,10 +155,11 @@ class GuideRatingController
             ':created_by' => $raterId
         ]);
 
+        require_once __DIR__ . '/../assets/helpers/flash.php';
         if ($result) {
-            $_SESSION['flash_success'] = 'Gửi đánh giá thành công! Cảm ơn bạn đã đóng góp ý kiến.';
+            flash_set('success', 'Gửi đánh giá thành công! Cảm ơn bạn đã đóng góp ý kiến.');
         } else {
-            $_SESSION['flash_error'] = 'Có lỗi xảy ra!';
+            flash_set('error', 'Có lỗi xảy ra!');
         }
 
         // Redirect tùy theo người đánh giá
@@ -170,10 +182,11 @@ class GuideRatingController
                                      WHERE id = :id");
         $result = $stmt->execute([':admin_id' => $adminId, ':id' => $id]);
 
+        require_once __DIR__ . '/../assets/helpers/flash.php';
         if ($result) {
-            $_SESSION['flash_success'] = 'Duyệt đánh giá thành công!';
+            flash_set('success', 'Duyệt đánh giá thành công!');
         } else {
-            $_SESSION['flash_error'] = 'Có lỗi xảy ra!';
+            flash_set('error', 'Có lỗi xảy ra!');
         }
 
         header('Location: ' . BASE_URL . '?r=guide_ratings');
@@ -191,10 +204,11 @@ class GuideRatingController
                                      WHERE id = :id");
         $result = $stmt->execute([':admin_id' => $adminId, ':id' => $id]);
 
+        require_once __DIR__ . '/../assets/helpers/flash.php';
         if ($result) {
-            $_SESSION['flash_success'] = 'Từ chối đánh giá thành công!';
+            flash_set('success', 'Từ chối đánh giá thành công!');
         } else {
-            $_SESSION['flash_error'] = 'Có lỗi xảy ra!';
+            flash_set('error', 'Có lỗi xảy ra!');
         }
 
         header('Location: ' . BASE_URL . '?r=guide_ratings');
@@ -209,10 +223,11 @@ class GuideRatingController
         $stmt = $this->pdo->prepare("UPDATE guide_ratings SET status = 'hidden' WHERE id = :id");
         $result = $stmt->execute([':id' => $id]);
 
+        require_once __DIR__ . '/../assets/helpers/flash.php';
         if ($result) {
-            $_SESSION['flash_success'] = 'Ẩn đánh giá thành công!';
+            flash_set('success', 'Ẩn đánh giá thành công!');
         } else {
-            $_SESSION['flash_error'] = 'Có lỗi xảy ra!';
+            flash_set('error', 'Có lỗi xảy ra!');
         }
 
         header('Location: ' . BASE_URL . '?r=guide_ratings');
@@ -239,7 +254,8 @@ class GuideRatingController
         $rating = $stmt->fetch();
 
         if (!$rating) {
-            $_SESSION['flash_error'] = 'Không tìm thấy đánh giá!';
+            require_once __DIR__ . '/../assets/helpers/flash.php';
+            flash_set('error', 'Không tìm thấy đánh giá!');
             header('Location: ' . BASE_URL . '?r=guide_ratings');
             exit;
         }

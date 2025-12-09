@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../models/BaseModel.php';
+require_once __DIR__ . '/../models/UserModel.php';
 
 class AdminController
 {
@@ -20,7 +21,14 @@ class AdminController
         ];
 
         try {
-            $stmt = $this->pdo->query("SELECT COALESCE(SUM(amount),0) AS total FROM payments WHERE status='completed' AND YEAR(payment_date)=YEAR(CURDATE()) AND MONTH(payment_date)=MONTH(CURDATE())");
+            $start = $_GET['start'] ?? null;
+            $end = $_GET['end'] ?? null;
+            if (!$start || !$end) {
+                $start = date('Y-m-01');
+                $end = date('Y-m-t');
+            }
+            $stmt = $this->pdo->prepare("SELECT COALESCE(SUM(p.amount),0) AS total FROM payments p WHERE p.status='completed' AND p.payment_date BETWEEN :start AND :end");
+            $stmt->execute([':start' => $start, ':end' => $end]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $metrics['mtdRevenue'] = (float)($row['total'] ?? 0);
         } catch (PDOException $e) {}
@@ -84,6 +92,17 @@ class AdminController
         }
 
         require __DIR__ . '/../views/admin/dashboard.php';
+    }
+
+    public function profile()
+    {
+        if (!isset($_SESSION['user_id']) || (($_SESSION['role'] ?? '') !== 'admin')) {
+            header('Location: ' . BASE_URL . '?r=admin_login');
+            exit;
+        }
+        $userModel = new UserModel();
+        $user = $userModel->find((int)$_SESSION['user_id']);
+        require __DIR__ . '/../views/admin/profile.php';
     }
 }
 ?>

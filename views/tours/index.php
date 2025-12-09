@@ -35,7 +35,7 @@
 
     .tours-grid-header {
         display: grid;
-        grid-template-columns: 40px minmax(320px, 2fr) 140px 120px 160px 160px 120px 120px 140px;
+        grid-template-columns: 40px minmax(320px, 2fr) 140px 120px 160px 160px 120px 120px 140px 120px;
         background: #f1f5f9;
         color: #64748b;
         border-bottom: 1px solid #e5e7eb;
@@ -64,7 +64,7 @@
 
     .tours-grid-row {
         display: grid;
-        grid-template-columns: 40px minmax(320px, 2fr) 140px 120px 160px 160px 120px 120px 140px;
+        grid-template-columns: 40px minmax(320px, 2fr) 140px 120px 160px 160px 120px 120px 140px 120px;
         border: 1px solid #e5e7eb;
         border-radius: 10px;
         margin-bottom: 6px;
@@ -215,14 +215,14 @@
     @media (max-width: 1400px) {
         .tours-grid-header,
         .tours-grid-row {
-            grid-template-columns: 40px 250px 100px 80px 120px 120px 80px 80px 100px;
+            grid-template-columns: 40px 250px 100px 80px 120px 120px 80px 80px 100px 90px;
         }
     }
 
     @media (max-width: 1200px) {
         .tours-grid-header,
         .tours-grid-row {
-            grid-template-columns: 40px 200px 80px 70px 100px 100px 70px 70px 90px;
+            grid-template-columns: 40px 200px 80px 70px 100px 100px 70px 70px 90px 80px;
         }
         .tours-grid-cell {
             font-size: 0.8rem;
@@ -237,20 +237,11 @@
 
     <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
     <div class="main-content">
-        <?php if (isset($_SESSION['flash_success'])): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <?= $_SESSION['flash_success'] ?>
+        <?php $flash = function_exists('flash_get') ? flash_get() : null; if (!empty($flash)): ?>
+            <div class="alert alert-<?= $flash['type']==='error'?'danger':'success' ?> alert-dismissible fade show" role="alert">
+                <?= htmlspecialchars($flash['message'] ?? '') ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-            <?php unset($_SESSION['flash_success']); ?>
-        <?php endif; ?>
-        
-        <?php if (isset($_SESSION['flash_error'])): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <?= $_SESSION['flash_error'] ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            <?php unset($_SESSION['flash_error']); ?>
         <?php endif; ?>
         
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -316,6 +307,7 @@
                 <div class="tours-grid-header-cell">Trạng thái</div>
                 <div class="tours-grid-header-cell">Giá NL</div>
                 <div class="tours-grid-header-cell">Hành động</div>
+                <div class="tours-grid-header-cell">Chi tiết</div>
             </div>
             
             <!-- Grid Body -->
@@ -431,6 +423,12 @@
                                     <i class="fas fa-trash"></i>
                                 </a>
                             </div>
+                        </div>
+                        <!-- Detail Link Cell -->
+                        <div class="tours-grid-cell tours-status-cell">
+                            <a href="<?= BASE_URL ?>?r=tours_show&id=<?= $tour['id'] ?>" class="btn btn-outline-dark btn-sm">
+                                <i class="fas fa-file-lines me-1"></i> Chi tiết
+                            </a>
                         </div>
                     </div>
                 <?php endforeach; else: ?>

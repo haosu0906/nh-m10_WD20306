@@ -107,6 +107,13 @@
                         <div class="text-center">
                             <div class="fw-bold"><?= (int)($b['total_guests'] ?? 0) ?></div>
                             <div class="text-muted" style="font-size:.8rem">người</div>
+                            <?php $tc = $typeCountsByBooking[(int)$b['id']] ?? null; if ($tc): ?>
+                            <div class="mt-1" style="font-size:.75rem">
+                                <span class="badge bg-light text-dark border">NL: <?= (int)($tc['adult'] ?? 0) ?></span>
+                                <span class="badge bg-light text-dark border ms-1">TE: <?= (int)($tc['child'] ?? 0) ?></span>
+                                <span class="badge bg-light text-dark border ms-1">EB: <?= (int)($tc['infant'] ?? 0) ?></span>
+                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="bookings-grid-cell bookings-status-cell">
@@ -127,6 +134,11 @@
                             <a href="<?= BASE_URL ?>?r=booking_detail&id=<?= (int)$b['id'] ?>" class="btn btn-sm btn-outline-info" title="Chi tiết">
                                 <i class="fas fa-eye"></i>
                             </a>
+                            <?php if (!empty($b['schedule_id'])): ?>
+                            <a href="<?= BASE_URL ?>?r=tour_manifest&departure_id=<?= (int)$b['schedule_id'] ?>" class="btn btn-sm btn-outline-secondary" title="Danh sách đoàn (Chuyến)">
+                                <i class="fas fa-clipboard-check"></i>
+                            </a>
+                            <?php endif; ?>
                             <a href="<?= BASE_URL ?>?r=booking_edit&id=<?= (int)$b['id'] ?>" class="btn btn-sm btn-outline-primary" title="Sửa">
                                 <i class="fas fa-edit"></i>
                             </a>

@@ -4,6 +4,10 @@ $old = flash('old') ?? [];
 $editing = isset($schedule) && !empty($schedule);
 $title = $editing ? 'Sửa lịch tour' : 'Thêm lịch tour';
 $formAction = $editing ? BASE_URL . '?r=schedules_update&id=' . (int)$schedule['id'] : BASE_URL . '?r=schedules_store';
+$preselectTourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
+if ($preselectTourId > 0 && empty($old['tour_id']) && empty($schedule['tour_id'])) {
+    $old['tour_id'] = $preselectTourId;
+}
 ?>
 <!doctype html>
 <html lang="vi">
@@ -97,6 +101,21 @@ $formAction = $editing ? BASE_URL . '?r=schedules_update&id=' . (int)$schedule['
                     <label class="form-label fw-bold">Sức chứa tối đa</label>
                     <input type="number" name="max_capacity" class="form-control form-control-lg"
                         value="<?= htmlspecialchars($old['max_capacity'] ?? ($schedule['max_capacity'] ?? 20)) ?>">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Giá người lớn</label>
+                    <input type="number" name="price_adult" class="form-control form-control-lg" min="0" step="1000"
+                        value="<?= htmlspecialchars($old['price_adult'] ?? ($schedule['price_adult'] ?? '')) ?>">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Giá trẻ em</label>
+                    <input type="number" name="price_child" class="form-control form-control-lg" min="0" step="1000"
+                        value="<?= htmlspecialchars($old['price_child'] ?? ($schedule['price_child'] ?? '')) ?>">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Giá em bé</label>
+                    <input type="number" name="price_infant" class="form-control form-control-lg" min="0" step="1000"
+                        value="<?= htmlspecialchars($old['price_infant'] ?? ($schedule['price_infant'] ?? '')) ?>">
                 </div>
             </div>
             </div>

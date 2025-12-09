@@ -8,6 +8,16 @@ class ScheduleModel extends BaseModel {
         parent::__construct();
     }
 
+    protected function hasColumn($name) {
+        try {
+            $stmt = $this->pdo->prepare("SHOW COLUMNS FROM `{$this->table_name}` LIKE ?");
+            $stmt->execute([$name]);
+            return $stmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
     public function all() {
         $query = "SELECT ts.*, t.title AS tour_title, u.full_name AS guide_name 
                   FROM tour_schedules ts
@@ -44,17 +54,22 @@ class ScheduleModel extends BaseModel {
         }
 
         try {
-            $query = "INSERT INTO tour_schedules (tour_id, start_date, end_date, guide_user_id, driver_user_id, max_capacity) 
-                      VALUES (?, ?, ?, ?, ?, ?)";
-            $stmt = $this->pdo->prepare($query);
-            return $stmt->execute([
+            $cols = ['tour_id','start_date','end_date','guide_user_id','driver_user_id','max_capacity'];
+            $vals = [
                 $data['tour_id'] ?? null,
                 $data['start_date'] ?? '',
                 $data['end_date'] ?? '',
                 $data['guide_user_id'] ?? null,
                 $driverId ?? 0,
                 $data['max_capacity'] ?? 20,
-            ]);
+            ];
+            if ($this->hasColumn('price_adult')) { $cols[] = 'price_adult'; $vals[] = $data['price_adult'] ?? null; }
+            if ($this->hasColumn('price_child')) { $cols[] = 'price_child'; $vals[] = $data['price_child'] ?? null; }
+            if ($this->hasColumn('price_infant')) { $cols[] = 'price_infant'; $vals[] = $data['price_infant'] ?? null; }
+            $placeholders = implode(',', array_fill(0, count($cols), '?'));
+            $query = "INSERT INTO {$this->table_name} (" . implode(',', $cols) . ") VALUES (" . $placeholders . ")";
+            $stmt = $this->pdo->prepare($query);
+            return $stmt->execute($vals);
         } catch (PDOException $e) {
             try {
                 $stmtU = $this->pdo->query("SELECT id FROM users ORDER BY id ASC LIMIT 1");
@@ -89,33 +104,43 @@ class ScheduleModel extends BaseModel {
         }
 
         try {
-            $query = "UPDATE tour_schedules SET tour_id = ?, start_date = ?, end_date = ?, guide_user_id = ?, 
-                      driver_user_id = ?, max_capacity = ? WHERE id = ?";
-            $stmt = $this->pdo->prepare($query);
-            return $stmt->execute([
+            $sets = ['tour_id = ?','start_date = ?','end_date = ?','guide_user_id = ?','driver_user_id = ?','max_capacity = ?'];
+            $vals = [
                 $data['tour_id'] ?? null,
                 $data['start_date'] ?? '',
                 $data['end_date'] ?? '',
                 $data['guide_user_id'] ?? null,
                 $driverId ?? 0,
                 $data['max_capacity'] ?? 20,
-                (int)$id
-            ]);
+            ];
+            if ($this->hasColumn('price_adult')) { $sets[] = 'price_adult = ?'; $vals[] = $data['price_adult'] ?? null; }
+            if ($this->hasColumn('price_child')) { $sets[] = 'price_child = ?'; $vals[] = $data['price_child'] ?? null; }
+            if ($this->hasColumn('price_infant')) { $sets[] = 'price_infant = ?'; $vals[] = $data['price_infant'] ?? null; }
+            $vals[] = (int)$id;
+            $query = "UPDATE {$this->table_name} SET " . implode(', ', $sets) . " WHERE id = ?";
+            $stmt = $this->pdo->prepare($query);
+            return $stmt->execute($vals);
         } catch (PDOException $e) {
             try {
                 $stmtU = $this->pdo->query("SELECT id FROM users ORDER BY id ASC LIMIT 1");
                 $rowU = $stmtU->fetch(PDO::FETCH_ASSOC);
                 $fallbackDriver = $rowU ? (int)$rowU['id'] : ($data['guide_user_id'] ?? null);
-                $stmt3 = $this->pdo->prepare("UPDATE tour_schedules SET tour_id = ?, start_date = ?, end_date = ?, guide_user_id = ?, driver_user_id = ?, max_capacity = ? WHERE id = ?");
-                return $stmt3->execute([
+                $sets = ['tour_id = ?','start_date = ?','end_date = ?','guide_user_id = ?','driver_user_id = ?','max_capacity = ?'];
+                $vals = [
                     $data['tour_id'] ?? null,
                     $data['start_date'] ?? '',
                     $data['end_date'] ?? '',
                     $data['guide_user_id'] ?? null,
                     $fallbackDriver ?? 0,
                     $data['max_capacity'] ?? 20,
-                    (int)$id
-                ]);
+                ];
+                if ($this->hasColumn('price_adult')) { $sets[] = 'price_adult = ?'; $vals[] = $data['price_adult'] ?? null; }
+                if ($this->hasColumn('price_child')) { $sets[] = 'price_child = ?'; $vals[] = $data['price_child'] ?? null; }
+                if ($this->hasColumn('price_infant')) { $sets[] = 'price_infant = ?'; $vals[] = $data['price_infant'] ?? null; }
+                $vals[] = (int)$id;
+                $query3 = "UPDATE {$this->table_name} SET " . implode(', ', $sets) . " WHERE id = ?";
+                $stmt3 = $this->pdo->prepare($query3);
+                return $stmt3->execute($vals);
             } catch (PDOException $e2) {
                 return false;
             }

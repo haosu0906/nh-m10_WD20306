@@ -96,17 +96,10 @@
             <a href="<?= BASE_URL ?>?r=guide_ratings" class="btn btn-outline-secondary">Quay lại</a>
         </div>
 
-        <?php if (isset($_SESSION['flash_error'])): ?>
-        <div class="alert alert-danger">
-            <?= $_SESSION['flash_error'] ?>
-            <?php unset($_SESSION['flash_error']); ?>
-        </div>
-        <?php endif; ?>
-
-        <?php if (isset($_SESSION['flash_success'])): ?>
-        <div class="alert alert-success">
-            <?= $_SESSION['flash_success'] ?>
-            <?php unset($_SESSION['flash_success']); ?>
+        <?php $flash = function_exists('flash_get') ? flash_get() : null; if (!empty($flash)): ?>
+        <div class="alert alert-<?= $flash['type']==='error'?'danger':'success' ?> alert-dismissible fade show" role="alert">
+            <?= htmlspecialchars($flash['message'] ?? '') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <?php endif; ?>
 
@@ -142,11 +135,11 @@
                             <label class="form-label fw-bold">Hướng dẫn viên</label>
                             <select name="guide_id" class="form-select form-select-lg" required>
                                 <option value="">-- Chọn hướng dẫn viên --</option>
-                                <?php if ($guide): ?>
-                                <option value="<?= $guide['id'] ?>" selected>
-                                    <?= htmlspecialchars($guide['full_name']) ?>
+                                <?php if (!empty($guides)): foreach ($guides as $gOpt): ?>
+                                <option value="<?= (int)$gOpt['id'] ?>" <?= (!empty($guide['id']) && (int)$guide['id']===(int)$gOpt['id'])?'selected':'' ?>>
+                                    <?= htmlspecialchars($gOpt['full_name'] ?? ('#'.$gOpt['id'])) ?>
                                 </option>
-                                <?php endif; ?>
+                                <?php endforeach; endif; ?>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -220,52 +213,24 @@
     </div>
 
     <script>
-    // Rating stars interaction
+    // Rating stars interaction đơn giản
     document.addEventListener('DOMContentLoaded', function() {
-        const ratingContainers = document.querySelectorAll('.rating-stars');
-        
-        ratingContainers.forEach(container => {
+        document.querySelectorAll('.rating-stars').forEach(function(container){
             const stars = container.querySelectorAll('.star-input');
             const input = container.nextElementSibling;
-            const display = container.nextElementSibling.nextElementSibling.querySelector('.rating-display');
-            
-            function setRating(value) {
-                input.value = value;
-                display.textContent = value + '.0';
-                
-                stars.forEach((star, index) => {
-                    if (index < value) {
-                        star.classList.add('active');
-                    } else {
-                        star.classList.remove('active');
-                    }
+            function paint(value){
+                stars.forEach(function(star, idx){
+                    star.style.color = (idx < value) ? '#ffc107' : '#ddd';
+                    star.classList.toggle('active', idx < value);
                 });
             }
-            
-            stars.forEach((star, index) => {
-                star.addEventListener('click', function() {
-                    setRating(index + 1);
-                });
-                
-                star.addEventListener('mouseenter', function() {
-                    stars.forEach((s, i) => {
-                        if (i <= index) {
-                            s.style.color = '#ffc107';
-                        } else {
-                            s.style.color = '#ddd';
-                        }
-                    });
-                });
-            });
-            
-            container.addEventListener('mouseleave', function() {
-                const currentValue = parseInt(input.value);
-                stars.forEach((s, i) => {
-                    if (i < currentValue) {
-                        s.style.color = '#ffc107';
-                    } else {
-                        s.style.color = '#ddd';
-                    }
+            // init from current value
+            paint(parseInt(input.value||'0',10));
+            stars.forEach(function(star){
+                star.addEventListener('click', function(){
+                    const value = parseInt(this.getAttribute('data-value'),10);
+                    input.value = value;
+                    paint(value);
                 });
             });
         });

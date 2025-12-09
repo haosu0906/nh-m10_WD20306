@@ -152,8 +152,7 @@ require_once __DIR__ . '/../../assets/configs/env.php';
 <body>
     <?php $current_page='guide_schedules'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
     <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
-    <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
-    <main class="main">
+    <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-4 fade-in">
             <div>
                 <h1 class="mb-2">📅 Lịch HDV</h1>
@@ -169,67 +168,43 @@ require_once __DIR__ . '/../../assets/configs/env.php';
             </div>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="row mb-4">
+        <?php $activeCount=0; $availableCount=0; foreach(($schedules ?? []) as $sc){ $st=strtolower((string)($sc['status'] ?? '')); if($st==='available'){ $availableCount++; } if($st==='busy' || !empty($sc['tour_title'])){ $activeCount++; } } ?>
+        <div class="row g-3 mb-4">
             <div class="col-md-4">
-                <div class="card border-0 bg-gradient-primary text-white slide-in-left">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="card-title mb-1">Tổng HDV</h6>
-                                <h3 class="mb-0"><?= count($guides ?? []) ?></h3>
-                            </div>
-                            <div class="icon-box">
-                                <i class="fas fa-users fa-2x opacity-75"></i>
-                            </div>
+                <div class="card shadow-sm h-100" style="border-left:4px solid #6f42c1;">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-light p-3" style="color:#6f42c1;">
+                            <i class="fas fa-users fa-lg"></i>
                         </div>
-                        <div class="mt-3">
-                            <small class="opacity-75">
-                                <i class="fas fa-arrow-up me-1"></i>
-                                +2 HDV mới
-                            </small>
+                        <div>
+                            <div class="text-muted">Tổng HDV</div>
+                            <div class="h4 mb-0" style="color:#6f42c1;"><?= number_format(count($guides ?? [])) ?></div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card border-0 bg-gradient-success text-white slide-in-left" style="animation-delay: 0.1s;">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="card-title mb-1">Đang làm việc</h6>
-                                <h3 class="mb-0">8</h3>
-                            </div>
-                            <div class="icon-box">
-                                <i class="fas fa-briefcase fa-2x opacity-75"></i>
-                            </div>
+                <div class="card shadow-sm h-100" style="border-left:4px solid #198754;">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-light p-3" style="color:#198754;">
+                            <i class="fas fa-briefcase fa-lg"></i>
                         </div>
-                        <div class="mt-3">
-                            <small class="opacity-75">
-                                <i class="fas fa-check me-1"></i>
-                                Hoạt động
-                            </small>
+                        <div>
+                            <div class="text-muted">Đang làm việc</div>
+                            <div class="h4 mb-0" style="color:#198754;"><?= number_format($activeCount) ?></div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card border-0 bg-gradient-warning text-white slide-in-left" style="animation-delay: 0.2s;">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="card-title mb-1">Rảnh rỗi</h6>
-                                <h3 class="mb-0">5</h3>
-                            </div>
-                            <div class="icon-box">
-                                <i class="fas fa-clock fa-2x opacity-75"></i>
-                            </div>
+                <div class="card shadow-sm h-100" style="border-left:4px solid #fd7e14;">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-light p-3" style="color:#fd7e14;">
+                            <i class="fas fa-clock fa-lg"></i>
                         </div>
-                        <div class="mt-3">
-                            <small class="opacity-75">
-                                <i class="fas fa-exclamation-triangle me-1"></i>
-                                Sẵn sàng
-                            </small>
+                        <div>
+                            <div class="text-muted">Sẵn sàng</div>
+                            <div class="h4 mb-0" style="color:#fd7e14;"><?= number_format($availableCount) ?></div>
                         </div>
                     </div>
                 </div>
@@ -255,14 +230,29 @@ require_once __DIR__ . '/../../assets/configs/env.php';
                     </div>
                     <?php if ($guideId > 0 && !empty($guideInfo)): ?>
                     <div class="col-md-6">
-                        <div class="alert alert-info mb-0">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-box-primary me-3" style="width: 40px; height: 40px;">
-                                    <i class="fas fa-user-tie text-info"></i>
-                                </div>
-                                <div>
-                                    <div class="fw-semibold"><?= htmlspecialchars($guideInfo['full_name']) ?></div>
-                                    <small class="text-muted">Email: <?= htmlspecialchars($guideInfo['email'] ?? '') ?> | SĐT: <?= htmlspecialchars($guideInfo['phone'] ?? '') ?></small>
+                        <div class="card shadow-sm mb-0">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center gap-3">
+                                    <?php $avatar = $guideInfo['avatar'] ?? ''; ?>
+                                    <?php if (!empty($avatar)): ?>
+                                        <img src="<?= htmlspecialchars($avatar) ?>" alt="Avatar" class="rounded-circle" style="width:48px;height:48px;object-fit:cover;">
+                                    <?php else: ?>
+                                        <div class="rounded-circle bg-light p-3" style="color:#0d6efd;">
+                                            <i class="fas fa-id-badge"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold fs-6"><?= htmlspecialchars($guideInfo['full_name']) ?></div>
+                                        <div class="text-muted d-flex flex-wrap gap-3">
+                                            <span><i class="fas fa-phone me-1"></i><?= htmlspecialchars($guideInfo['phone'] ?? '—') ?></span>
+                                            <span><i class="fas fa-envelope me-1"></i><?= htmlspecialchars($guideInfo['email'] ?? '—') ?></span>
+                                            <span><i class="fas fa-globe me-1"></i><?= htmlspecialchars($guideInfo['guide_type'] ?? '—') ?></span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <a href="<?= BASE_URL ?>?r=guide_schedules_create&guide_id=<?= (int)$guideId ?>" class="btn btn-primary btn-sm"><i class="fas fa-plus me-1"></i>Thêm lịch</a>
+                                        <a href="<?= BASE_URL ?>?r=guides" class="btn btn-outline-secondary btn-sm"><i class="fas fa-user-tie me-1"></i>DS HDV</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -400,6 +390,6 @@ require_once __DIR__ . '/../../assets/configs/env.php';
             </div>
         </div>
         <?php endif; ?>
-    </main>
+    </div>
 </body>
 </html>

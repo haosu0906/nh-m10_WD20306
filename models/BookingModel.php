@@ -204,11 +204,17 @@ class BookingModel extends BaseModel {
                              te.expense_type as service_type, te.description as service_description
                       FROM tour_expenses te
                       JOIN suppliers s ON te.supplier_id = s.id
-                      WHERE te.tour_id = ?
+                      WHERE te.tour_id = ? AND te.is_actual_cost = 0 AND te.amount = 0
                       ORDER BY s.id, te.expense_type";
             $stmt = $this->pdo->prepare($query);
             $stmt->execute([$tour_id]);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($rows as &$r) {
+                if (!empty($r['service_description']) && stripos($r['service_description'], 'service:') === 0) {
+                    $r['service_description'] = substr($r['service_description'], 8);
+                }
+            }
+            unset($r);
             if (!empty($rows)) return $rows;
         } catch (Exception $e) {}
 

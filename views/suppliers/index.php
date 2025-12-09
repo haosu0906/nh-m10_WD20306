@@ -284,7 +284,7 @@
                 </div>
                 <div class="suppliers-grid-header-cell">Nhà cung cấp</div>
                 <div class="suppliers-grid-header-cell">Người liên hệ</div>
-                <div class="suppliers-grid-header-cell">Loại dịch vụ</div>
+                <div class="suppliers-grid-header-cell">Dịch vụ</div>
                 <div class="suppliers-grid-header-cell">Liên hệ</div>
                 <div class="suppliers-grid-header-cell">Hành động</div>
             </div>
@@ -328,6 +328,7 @@
                                 'restaurant' => ['Nhà hàng', 'fa-utensils', 'bg-success'],
                                 'transport' => ['Vận chuyển', 'fa-bus', 'bg-warning'],
                                 'ticket' => ['Vé tham quan', 'fa-ticket-alt', 'bg-info'],
+                                'attraction' => ['Điểm tham quan', 'fa-landmark', 'bg-info'],
                                 'insurance' => ['Bảo hiểm', 'fa-shield-alt', 'bg-secondary'],
                                 'guide' => ['HDV', 'fa-user-tie', 'bg-dark'],
                                 'meal' => ['Ăn uống', 'fa-coffee', 'bg-danger'],

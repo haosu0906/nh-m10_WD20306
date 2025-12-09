@@ -313,6 +313,12 @@
 
     <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
   <div class="main-content">
+        <?php $flash = function_exists('flash_get') ? flash_get() : null; if (!empty($flash)): ?>
+            <div class="alert alert-<?= $flash['type']==='error'?'danger':'success' ?> alert-dismissible fade show" role="alert">
+                <?= htmlspecialchars($flash['message'] ?? '') ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
         <div class="d-flex justify-content-between align-items-center mb-4 fade-in">
             <div>
                 <h1 class="mb-2">⭐ Đánh Giá HDV</h1>

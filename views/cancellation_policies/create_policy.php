@@ -9,6 +9,7 @@ require_once __DIR__ . '/../../assets/configs/env.php';
     <title>Thêm Chính sách hủy tour</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="<?= BASE_URL ?>assets/css/modern-ui.css" rel="stylesheet" />
     <style>
     :root {
         --accent: #667eea;
@@ -43,42 +44,13 @@ require_once __DIR__ . '/../../assets/configs/env.php';
         background: rgba(255, 255, 255, .1);
     }
 
-    .main {
-        margin-left: 200px;
-        padding: 22px;
-    }
     </style>
 </head>
 
 <body>
     <?php $current_page='cancellation_policies'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
     <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
-    <div class="sidebar-old" style="display:none">
-        <h3><i class="fas fa-map-marked-alt"></i> Quản trị Tripmate</h3>
-        <nav class="nav flex-column">
-            <a class="nav-link" href="<?= BASE_URL ?>?r=home"><i class="fas fa-tachometer-alt"></i> Tổng quan</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=tour_categories"><i class="fas fa-map"></i> Danh mục tour</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=tours"><i class="fas fa-route"></i> Tours</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=suppliers"><i class="fas fa-handshake"></i> Nhà cung cấp</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=booking"><i class="fas fa-book"></i> Booking</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guides"><i class="fas fa-user-tie"></i> HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_assignments"><i class="fas fa-user-check"></i> Phân công HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_schedules"><i class="fas fa-calendar-alt"></i> Lịch HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_ratings"><i class="fas fa-star"></i> Đánh giá HDV</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=schedules"><i class="fas fa-calendar"></i> Lịch khởi hành</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=staff"><i class="fas fa-users"></i> Nhân sự</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=payments"><i class="fas fa-credit-card"></i> Thanh toán</a>
-            <a class="nav-link active" href="<?= BASE_URL ?>?r=cancellation_policies"><i class="fas fa-ban"></i> Chính sách hủy</a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=guide_login">
-                <i class="fas fa-door-open"></i> Portal HDV
-            </a>
-            <a class="nav-link" href="<?= BASE_URL ?>?r=admin_login">
-                <i class="fas fa-user-shield"></i> Đăng nhập Admin
-            </a>
-        </nav>
-    </div>
-
-    <main class="main">
+    <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h3>Thêm Chính sách hủy tour</h3>
             <a href="<?= BASE_URL ?>?r=cancellation_policies" class="btn btn-outline-secondary">Quay lại</a>
@@ -134,7 +106,7 @@ require_once __DIR__ . '/../../assets/configs/env.php';
                 </div>
             </div>
         </form>
-    </main>
+    </div>
 </body>
 
 </html>

@@ -54,17 +54,10 @@
             <a href="<?= BASE_URL ?>?r=guide_assignments" class="btn btn-outline-secondary">Quay lại</a>
         </div>
 
-        <?php if (isset($_SESSION['flash_error'])): ?>
-        <div class="alert alert-danger">
-            <?= $_SESSION['flash_error'] ?>
-            <?php unset($_SESSION['flash_error']); ?>
-        </div>
-        <?php endif; ?>
-
-        <?php if (isset($_SESSION['flash_success'])): ?>
-        <div class="alert alert-success">
-            <?= $_SESSION['flash_success'] ?>
-            <?php unset($_SESSION['flash_success']); ?>
+        <?php $flash = function_exists('flash_get') ? flash_get() : null; if (!empty($flash)): ?>
+        <div class="alert alert-<?= $flash['type']==='error'?'danger':'success' ?> alert-dismissible fade show" role="alert">
+            <?= htmlspecialchars($flash['message'] ?? '') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <?php endif; ?>
 

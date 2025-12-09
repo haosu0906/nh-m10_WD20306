@@ -63,6 +63,7 @@ CREATE TABLE `booking_guests` (
   `dob` date NOT NULL,
   `id_document_no` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `is_checked_in` tinyint(1) NOT NULL,
+  `is_no_show` tinyint(1) NOT NULL DEFAULT '0',
   `notes` text COLLATE utf8mb4_unicode_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

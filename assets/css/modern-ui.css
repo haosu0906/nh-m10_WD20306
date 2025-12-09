@@ -63,9 +63,9 @@ body {
   border-right: 1px solid rgba(255, 255, 255, 0.1);
   width: var(--sidebar-width) !important;
   position: fixed !important;
-  top: 0; left: 0; bottom: 0;
-  z-index: 1000;
-  overflow-y: auto;
+  top: 0 !important; left: 0 !important; bottom: 0 !important;
+  z-index: 1000 !important;
+  overflow-y: auto !important;
 }
 
 .sidebar h3 {
@@ -142,11 +142,23 @@ body {
 }
 
 .main-content {
-  margin-left: var(--sidebar-width);
-  margin-top: var(--topbar-height);
+  margin-left: var(--sidebar-width) !important;
+  margin-top: var(--topbar-height) !important;
   padding: 2rem;
-  min-height: 100vh;
+  padding-top: 80px !important;
+  min-height: 100vh !important;
   background: #eff6ff !important;
+}
+
+/* Fixed Topbar: ensure it starts after sidebar */
+header, .topbar {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  left: 260px !important;
+  width: calc(100% - 260px) !important;
+  height: var(--topbar-height) !important;
+  z-index: 1100 !important;
 }
 
 .wrapper, .page-wrapper {

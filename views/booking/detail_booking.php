@@ -76,9 +76,16 @@
                 <h2>Chi tiết Booking #<?= htmlspecialchars($item['id']) ?></h2>
                 <p class="text-muted mb-0">Thông tin chi tiết và quản lý booking tour</p>
             </div>
-            <a href="<?= BASE_URL ?>?r=booking" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Quay lại
-            </a>
+            <div class="d-flex gap-2">
+                <?php if (!empty($item['schedule_id'])): ?>
+                <a href="<?= BASE_URL ?>?r=tour_manifest&departure_id=<?= (int)$item['schedule_id'] ?>" class="btn btn-secondary">
+                    <i class="fas fa-clipboard-list me-2"></i>Danh sách đoàn (Chuyến)
+                </a>
+                <?php endif; ?>
+                <a href="<?= BASE_URL ?>?r=booking" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                </a>
+            </div>
         </div>
 
         <?php if ($item): 
@@ -97,21 +104,21 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <p><strong>Họ tên:</strong> <?= htmlspecialchars($customer['full_name'] ?? 'N/A') ?></p>
+                        <p><strong>Họ tên:</strong> <?= htmlspecialchars($customer['full_name'] ?? 'Không có') ?></p>
                         <p><strong>Số điện thoại:</strong> 
                             <a href="tel:<?= htmlspecialchars($customer['phone'] ?? '') ?>">
-                                <?= htmlspecialchars($customer['phone'] ?? 'N/A') ?>
+                                <?= htmlspecialchars($customer['phone'] ?? 'Không có') ?>
                             </a>
                         </p>
                         <p><strong>Email:</strong> 
                             <a href="mailto:<?= htmlspecialchars($customer['email'] ?? '') ?>">
-                                <?= htmlspecialchars($customer['email'] ?? 'N/A') ?>
+                                <?= htmlspecialchars($customer['email'] ?? 'Không có') ?>
                             </a>
                         </p>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Địa chỉ:</strong> <?= htmlspecialchars($customer['address'] ?? 'N/A') ?></p>
-                        <p><strong>Ngày đặt:</strong> <?= !empty($item['date_booked']) ? date('d/m/Y H:i', strtotime($item['date_booked'])) : 'N/A' ?></p>
+                        <p><strong>Địa chỉ:</strong> <?= htmlspecialchars($customer['address'] ?? 'Không có') ?></p>
+                        <p><strong>Ngày đặt:</strong> <?= !empty($item['date_booked']) ? date('d/m/Y H:i', strtotime($item['date_booked'])) : 'Không có' ?></p>
                         <p><strong>Trạng thái:</strong> 
                             <?php
                                 $statusLabels = [
@@ -120,7 +127,7 @@
                                     'completed' => '<span class="badge bg-success badge-status">Hoàn tất</span>',
                                     'canceled' => '<span class="badge bg-danger badge-status">Hủy</span>'
                                 ];
-                                echo $statusLabels[$item['booking_status'] ?? 'pending'] ?? '<span class="badge bg-secondary badge-status">N/A</span>';
+                                echo $statusLabels[$item['booking_status'] ?? 'pending'] ?? '<span class="badge bg-secondary badge-status">Không rõ</span>';
                             ?>
                         </p>
                     </div>
@@ -140,11 +147,12 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Tên Nhà cung cấp</th>
-                                <th>Loại</th>
                                 <th>Dịch vụ</th>
+                                <th>Trạng thái dịch vụ</th>
                                 <th>Người liên hệ</th>
                                 <th>Điện thoại</th>
                                 <th>Email</th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -157,30 +165,100 @@
                                         $supplier_ids[$key] = true;
                             ?>
                             <tr>
-                                <td><strong><?= htmlspecialchars($supp['name'] ?? 'N/A') ?></strong></td>
-                                <td><?= htmlspecialchars($supp['type'] ?? 'N/A') ?></td>
+                                <td><strong><?= htmlspecialchars($supp['name'] ?? 'Không có') ?></strong></td>
                                 <td>
                                     <?php 
-                                        // Lấy tất cả dịch vụ của supplier này
+                                        $serviceTypeMap = [
+                                            'hotel' => 'Khách sạn',
+                                            'restaurant' => 'Nhà hàng',
+                                            'transport' => 'Vận chuyển',
+                                            'attraction' => 'Điểm tham quan',
+                                            'ticket' => 'Vé tham quan',
+                                            'insurance' => 'Bảo hiểm',
+                                            'guide' => 'HDV',
+                                            'meal' => 'Ăn uống',
+                                            'entertain' => 'Giải trí',
+                                            'other' => 'Dịch vụ khác',
+                                        ];
                                         $services = [];
                                         foreach ($suppliers as $s) {
                                             if ($s['id'] == $supp['id']) {
-                                                $services[] = $s['service_type'] . ': ' . $s['service_description'];
+                                                $stype = (string)($s['service_type'] ?? '');
+                                                $label = $serviceTypeMap[strtolower($stype)] ?? $stype;
+                                                $raw = (string)($s['service_description'] ?? '');
+                                                if (stripos($raw, 'service:') === 0) { $raw = substr($raw, 8); }
+                                                $st = null; if (preg_match('/\[CONFIRM:(pending|confirmed|canceled)\]/i', $raw, $m)) { $st = strtolower($m[1]); }
+                                                $rem = null; if (preg_match('/\[REMIND:([0-9\-: ]+)\]/i', $raw, $m2)) { $rem = trim($m2[1]); }
+                                                $desc = preg_replace('/\s*\[CONFIRM:(pending|confirmed|canceled)\]/i', '', $raw);
+                                                $desc = preg_replace('/\s*\[REMIND:([0-9\-: ]+)\]/i', '', $desc);
+                                                $services[] = [
+                                                    'type' => $stype,
+                                                    'label' => $label,
+                                                    'desc' => trim($desc),
+                                                    'status' => $st,
+                                                    'remind' => $rem,
+                                                ];
                                             }
                                         }
-                                        echo implode('<br>', $services);
+                                        foreach ($services as $sv) {
+                                            echo htmlspecialchars($sv['label']) . ($sv['desc'] !== '' ? (': ' . htmlspecialchars($sv['desc'])) : '') . '<br>';
+                                        }
                                     ?>
                                 </td>
-                                <td><?= htmlspecialchars($supp['contact_person'] ?? 'N/A') ?></td>
+                                <td>
+                                    <?php 
+                                        $statusLabels = [
+                                            'pending' => '<span class="badge bg-secondary">Chưa xác nhận</span>',
+                                            'confirmed' => '<span class="badge bg-success">Đã xác nhận</span>',
+                                            'canceled' => '<span class="badge bg-danger">Đã hủy</span>'
+                                        ];
+                                        foreach ($services as $sv) {
+                                            $st = $sv['status'] ?? null;
+                                            $badge = $st ? $statusLabels[$st] : '<span class="badge bg-light text-dark border">Chưa có trạng thái</span>';
+                                            $rem = !empty($sv['remind']) ? (' <small class="text-muted">Nhắc: ' . htmlspecialchars($sv['remind']) . '</small>') : '';
+                                            echo $badge . $rem . '<br>';
+                                        }
+                                    ?>
+                                </td>
+                                <td><?= htmlspecialchars($supp['contact_person'] ?? 'Không có') ?></td>
                                 <td>
                                     <a href="tel:<?= htmlspecialchars($supp['phone'] ?? '') ?>">
-                                        <?= htmlspecialchars($supp['phone'] ?? 'N/A') ?>
+                                        <?= htmlspecialchars($supp['phone'] ?? 'Không có') ?>
                                     </a>
                                 </td>
                                 <td>
                                     <a href="mailto:<?= htmlspecialchars($supp['email'] ?? '') ?>">
-                                        <?= htmlspecialchars($supp['email'] ?? 'N/A') ?>
+                                        <?= htmlspecialchars($supp['email'] ?? 'Không có') ?>
                                     </a>
+                                </td>
+                                <td>
+                                    <form method="post" action="<?= BASE_URL ?>?r=booking_supplier_confirm" class="d-flex flex-wrap gap-2 align-items-center">
+                                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                                        <input type="hidden" name="booking_id" value="<?= (int)$item['id'] ?>">
+                                        <input type="hidden" name="supplier_id" value="<?= (int)$supp['id'] ?>">
+                                        <select name="service_type" class="form-select form-select-sm" style="min-width:180px">
+                                            <?php foreach ($services as $sv): ?>
+                                                <option value="<?= htmlspecialchars($sv['type']) ?>"><?= htmlspecialchars($sv['label']) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <select name="status" class="form-select form-select-sm" style="min-width:160px">
+                                            <option value="pending">Chưa xác nhận</option>
+                                            <option value="confirmed">Đã xác nhận</option>
+                                            <option value="canceled">Đã hủy</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-primary">Cập nhật</button>
+                                    </form>
+                                    <form method="post" action="<?= BASE_URL ?>?r=booking_supplier_remind" class="d-inline-block mt-2">
+                                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                                        <input type="hidden" name="booking_id" value="<?= (int)$item['id'] ?>">
+                                        <input type="hidden" name="supplier_id" value="<?= (int)$supp['id'] ?>">
+                                        <select name="service_type" class="form-select form-select-sm d-inline-block" style="min-width:180px">
+                                            <?php foreach ($services as $sv): ?>
+                                                <option value="<?= htmlspecialchars($sv['type']) ?>"><?= htmlspecialchars($sv['label']) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-outline-warning">Nhắc NCC</button>
+                                    </form>
                                 </td>
                             </tr>
                             <?php 
@@ -231,8 +309,28 @@
                                         echo htmlspecialchars($dob ? date('Y', strtotime($dob)) : ($yob ?? ''));
                                     ?>
                                 </td>
-                                <td><?= htmlspecialchars($guest['gender'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($guest['type'] ?? 'Người lớn') ?></td>
+                                <td>
+                                    <?php
+                                        $genderMap = [
+                                            'male' => 'Nam',
+                                            'female' => 'Nữ',
+                                            'other' => 'Khác',
+                                        ];
+                                        $g = strtolower($guest['gender'] ?? '');
+                                        echo htmlspecialchars($genderMap[$g] ?? ($guest['gender'] ?? ''));
+                                    ?>
+                                </td>
+                                <td>
+                                    <?php 
+                                        $typeMap = [
+                                            'adult' => 'Người lớn',
+                                            'child' => 'Trẻ em',
+                                            'infant' => 'Em bé',
+                                        ];
+                                        $t = strtolower($guest['guest_type'] ?? ($guest['type'] ?? 'adult'));
+                                        echo htmlspecialchars($typeMap[$t] ?? 'Người lớn');
+                                    ?>
+                                </td>
                                 <td><?= htmlspecialchars($guest['id_document_no'] ?? ($guest['passport'] ?? '')) ?></td>
                                 <td>
                                     <?php $currentAssign = !empty($assignmentsByGuest[$guest['id'] ?? 0]) ? $assignmentsByGuest[$guest['id']] : null; ?>
@@ -243,7 +341,9 @@
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <?php if (!empty($guest['is_checked_in'])): ?>
+                                    <?php if (!empty($guest['is_no_show'])): ?>
+                                        <span class="badge bg-danger">Vắng mặt</span>
+                                    <?php elseif (!empty($guest['is_checked_in'])): ?>
                                         <span class="badge bg-success">Đã đến</span>
                                     <?php else: ?>
                                         <span class="badge bg-light text-dark border">Chưa đến</span>
@@ -268,7 +368,7 @@
                                                         </select>
                                                         <input type="date" name="check_in_date" class="form-control form-control-sm" style="max-width:150px">
                                                         <input type="date" name="check_out_date" class="form-control form-control-sm" style="max-width:150px">
-                                                        <button type="submit" class="btn btn-sm btn-primary">Gán</button>
+                                                        <button type="submit" class="btn btn-sm btn-primary" <?= !empty($guest['is_no_show'])?'disabled':'' ?>>Gán</button>
                                                         <?php if ($currentAssign): ?>
                                                             <a class="btn btn-sm btn-outline-danger" href="<?= BASE_URL ?>?r=booking_unassign_room&assignment_id=<?= (int)$currentAssign['id'] ?>&booking_id=<?= (int)$item['id'] ?>" onclick="return confirm('Gỡ phân phòng khách này?')">Gỡ</a>
                                                         <?php endif; ?>
@@ -281,16 +381,26 @@
                                                     <input type="hidden" name="booking_id" value="<?= (int)$item['id'] ?>">
                                                     <input type="hidden" name="guest_id" value="<?= (int)($guest['id'] ?? 0) ?>">
                                                     <input type="hidden" name="checked" value="<?= !empty($guest['is_checked_in']) ? 0 : 1 ?>">
+                                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                                                     <div class="d-flex flex-wrap gap-2">
                                                         <select name="stage" class="form-select form-select-sm" style="max-width:160px">
                                                             <option value="gather">Điểm tập trung</option>
                                                             <option value="bus">Lên xe</option>
                                                         </select>
                                                         <input name="location" class="form-control form-control-sm" style="max-width:180px" placeholder="Vị trí (VD: Cổng A)">
-                                                        <button type="submit" class="btn btn-sm <?= !empty($guest['is_checked_in']) ? 'btn-success' : 'btn-outline-secondary' ?>">
+                                                        <button type="submit" class="btn btn-sm <?= !empty($guest['is_checked_in']) ? 'btn-success' : 'btn-outline-secondary' ?>" <?= !empty($guest['is_no_show'])?'disabled':'' ?> >
                                                             <?= !empty($guest['is_checked_in']) ? 'Đánh dấu chưa đến' : 'Đánh dấu đã đến' ?>
                                                         </button>
                                                     </div>
+                                                </form>
+                                                <form method="post" action="<?= BASE_URL ?>?r=booking_guest_noshow" class="mt-2">
+                                                    <input type="hidden" name="booking_id" value="<?= (int)$item['id'] ?>">
+                                                    <input type="hidden" name="guest_id" value="<?= (int)($guest['id'] ?? 0) ?>">
+                                                    <input type="hidden" name="no_show" value="<?= !empty($guest['is_no_show']) ? 0 : 1 ?>">
+                                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <?= !empty($guest['is_no_show']) ? 'Bỏ vắng mặt' : 'Đánh dấu vắng mặt' ?>
+                                                    </button>
                                                 </form>
                                             </div>
                                         </div>
@@ -330,6 +440,15 @@
                         </h5>
                     </div>
                 </div>
+                <?php if (!empty($typeCounts)): ?>
+                <div class="row mb-2">
+                    <div class="col">
+                        <span class="badge bg-light text-dark border">Người lớn: <?= (int)($typeCounts['adult'] ?? 0) ?></span>
+                        <span class="badge bg-light text-dark border ms-2">Trẻ em: <?= (int)($typeCounts['child'] ?? 0) ?></span>
+                        <span class="badge bg-light text-dark border ms-2">Em bé: <?= (int)($typeCounts['infant'] ?? 0) ?></span>
+                    </div>
+                </div>
+                <?php endif; ?>
 
                 <?php if ($remaining > 0): ?>
                 <div class="debt-warning">
@@ -371,11 +490,11 @@
                         <tbody>
                             <?php foreach ($payment_history as $payment): ?>
                             <tr>
-                                <td><?= !empty($payment['payment_date']) ? date('d/m/Y H:i', strtotime($payment['payment_date'])) : 'N/A' ?></td>
+                                <td><?= !empty($payment['payment_date']) ? date('d/m/Y H:i', strtotime($payment['payment_date'])) : 'Không có' ?></td>
                                 <td><?= number_format($payment['amount'] ?? 0, 0, ',', '.') ?> đ</td>
                                 <td>
                                     <?php
-                                        $method = $payment['method'] ?? 'N/A';
+                                        $method = $payment['method'] ?? 'Không rõ';
                                         $methodLabels = [
                                             'bank_transfer' => 'Chuyển khoản',
                                             'cash' => 'Tiền mặt'
@@ -383,7 +502,7 @@
                                         echo htmlspecialchars($methodLabels[$method] ?? ucfirst(str_replace('_', ' ', $method)));
                                     ?>
                                 </td>
-                                <td><?= htmlspecialchars($payment['confirmed_by'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($payment['confirmed_by'] ?? 'Không có') ?></td>
                                 <td>
                                     <?php if (($payment['status'] ?? '') === 'completed'): ?>
                                         <span class="badge bg-success">Hoàn thành</span>
@@ -430,7 +549,7 @@
                             foreach ($statusHistory as $st): 
                         ?>
                             <tr>
-                                <td><?= !empty($st['changed_at']) ? date('d/m/Y H:i', strtotime($st['changed_at'])) : 'N/A' ?></td>
+                                <td><?= !empty($st['changed_at']) ? date('d/m/Y H:i', strtotime($st['changed_at'])) : 'Không có' ?></td>
                                 <td><?= htmlspecialchars($viStatus[$st['old_status'] ?? ''] ?? ($st['old_status'] ?? '')) ?></td>
                                 <td><?= htmlspecialchars($viStatus[$st['new_status'] ?? ''] ?? ($st['new_status'] ?? '')) ?></td>
                                 <td><?= htmlspecialchars(($st['changed_by_name'] ?? '') ?: ($st['changed_by'] ?? '')) ?></td>

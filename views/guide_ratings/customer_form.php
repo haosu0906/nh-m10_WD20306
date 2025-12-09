@@ -153,18 +153,12 @@
             </div>
         </div>
 
-        <?php if (isset($_SESSION['flash_error'])): ?>
-        <div class="error-message mx-3 mt-3">
-            <?= $_SESSION['flash_error'] ?>
-            <?php unset($_SESSION['flash_error']); ?>
-        </div>
-        <?php endif; ?>
-
-        <?php if (isset($_SESSION['flash_success'])): ?>
-        <div class="success-message mx-3 mt-3">
-            <?= $_SESSION['flash_success'] ?>
-            <?php unset($_SESSION['flash_success']); ?>
-        </div>
+        <?php $flash = function_exists('flash_get') ? flash_get() : null; if (!empty($flash)): ?>
+          <?php if (($flash['type'] ?? '') === 'error' || ($flash['type'] ?? '') === 'danger'): ?>
+            <div class="error-message mx-3 mt-3"><?= htmlspecialchars($flash['message'] ?? '') ?></div>
+          <?php elseif (($flash['type'] ?? '') === 'success'): ?>
+            <div class="success-message mx-3 mt-3"><?= htmlspecialchars($flash['message'] ?? '') ?></div>
+          <?php endif; ?>
         <?php endif; ?>
 
         <form method="post" action="<?= BASE_URL ?>?r=guide_ratings_store" class="p-3">

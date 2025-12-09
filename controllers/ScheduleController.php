@@ -67,6 +67,9 @@ class ScheduleController {
             'guide_user_id' => !empty($_POST['guide_user_id']) ? (int)$_POST['guide_user_id'] : null,
             'driver_user_id' => !empty($_POST['driver_user_id']) ? (int)$_POST['driver_user_id'] : null,
             'max_capacity' => (int)($_POST['max_capacity'] ?? 20),
+            'price_adult' => isset($_POST['price_adult']) && $_POST['price_adult'] !== '' ? (float)$_POST['price_adult'] : null,
+            'price_child' => isset($_POST['price_child']) && $_POST['price_child'] !== '' ? (float)$_POST['price_child'] : null,
+            'price_infant' => isset($_POST['price_infant']) && $_POST['price_infant'] !== '' ? (float)$_POST['price_infant'] : null,
         ];
 
         $errors = [];
@@ -107,6 +110,9 @@ class ScheduleController {
             'guide_user_id' => !empty($_POST['guide_user_id']) ? (int)$_POST['guide_user_id'] : null,
             'driver_user_id' => !empty($_POST['driver_user_id']) ? (int)$_POST['driver_user_id'] : null,
             'max_capacity' => (int)($_POST['max_capacity'] ?? 20),
+            'price_adult' => isset($_POST['price_adult']) && $_POST['price_adult'] !== '' ? (float)$_POST['price_adult'] : null,
+            'price_child' => isset($_POST['price_child']) && $_POST['price_child'] !== '' ? (float)$_POST['price_child'] : null,
+            'price_infant' => isset($_POST['price_infant']) && $_POST['price_infant'] !== '' ? (float)$_POST['price_infant'] : null,
         ];
 
         $errors = [];

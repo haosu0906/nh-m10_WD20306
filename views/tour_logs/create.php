@@ -4,12 +4,13 @@
     <meta charset="utf-8">
     <title>Thêm nhật ký tour</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="<?= BASE_URL ?>assets/css/modern-ui.css" rel="stylesheet" />
 </head>
 <body>
 <?php require_once __DIR__ . '/../../assets/configs/env.php'; ?>
 <?php $current_page='tour_logs'; require_once __DIR__ . '/../../assets/templates/sidebar.php'; ?>
 <?php require_once __DIR__ . '/../../assets/templates/topbar.php'; ?>
-<main class="main" style="margin-left:200px;padding:86px 22px 22px">
+<div class="main-content">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="mb-0">Thêm nhật ký tour</h3>
         <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>?r=tour_logs">Quay lại</a>
@@ -60,6 +61,6 @@
 
         <button class="btn btn-primary">Lưu nhật ký</button>
     </form>
-</main>
+</div>
 </body>
 </html>

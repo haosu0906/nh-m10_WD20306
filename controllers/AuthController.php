@@ -22,6 +22,9 @@ class AuthController
     public function handleGuideLogin()
     {
         $userModel = new UserModel();
+        if (!csrf_validate($_POST['csrf_token'] ?? '')) {
+            redirect_with_flash(BASE_URL . '?r=guide_login', ['login' => 'CSRF token không hợp lệ.'], $_POST);
+        }
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
         $errors = [];
@@ -47,10 +50,9 @@ class AuthController
             redirect_with_flash(BASE_URL . '?r=guide_login', $errors, ['email' => $email]);
         }
 
-        // Lưu session khi login thành công
         $_SESSION['user_id'] = (int)$user['id'];
         $_SESSION['role'] = $user['role'];
-
+        flash_set('success', 'Đăng nhập HDV thành công');
         header('Location: ' . BASE_URL . '?r=guide_dashboard');
         exit;
     }
@@ -80,6 +82,9 @@ class AuthController
     public function handleAdminLogin()
     {
         $userModel = new UserModel();
+        if (!csrf_validate($_POST['csrf_token'] ?? '')) {
+            redirect_with_flash(BASE_URL . '?r=admin_login', ['login' => 'CSRF token không hợp lệ.'], $_POST);
+        }
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
         $errors = [];
@@ -105,10 +110,9 @@ class AuthController
             redirect_with_flash(BASE_URL . '?r=admin_login', $errors, ['email' => $email]);
         }
 
-        // Lưu session khi login thành công
         $_SESSION['user_id'] = (int)$user['id'];
         $_SESSION['role'] = $user['role'];
-
+        flash_set('success', 'Đăng nhập admin thành công');
         header('Location: ' . BASE_URL . '?r=home');
         exit;
     }

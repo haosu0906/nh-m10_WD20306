@@ -66,6 +66,7 @@ require_once __DIR__ . '/../../assets/configs/env.php';
         </div>
 
         <form method="post" action="<?= BASE_URL ?>?r=payments_update&id=<?= $payment['id'] ?>">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
             <div class="card shadow-sm">
                 <div class="card-header bg-light fw-bold">Thông tin thanh toán</div>
                 <div class="card-body">

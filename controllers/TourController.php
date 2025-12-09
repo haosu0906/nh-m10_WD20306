@@ -6,6 +6,7 @@ require_once __DIR__ . '/../models/TourItineraryModel.php';
 require_once __DIR__ . '/../models/TourImageModel.php';
 require_once __DIR__ . '/../models/TourPriceModel.php';
 require_once __DIR__ . '/../models/TourSupplierModel.php';
+require_once __DIR__ . '/../models/SupplierModel.php';
 require_once __DIR__ . '/../models/ScheduleModel.php';
 require_once __DIR__ . '/../models/UserModel.php';
 require_once __DIR__ . '/../models/TourItineraryItemModel.php';
@@ -116,19 +117,14 @@ class TourController
         $tourId = (int)($post['tour_id'] ?? 0);
         if (!$itemId || !$tourId) { header('Location: ' . BASE_URL . '?r=tours'); exit; }
         try {
-            $stmt = $this->itineraryItemModel->pdo->prepare(
-                "UPDATE {$this->itineraryItemModel->table_name} SET day_number=?, activity_time=?, end_time=?, slot=?, title=?, details=?, meal_plan=? WHERE id=? AND tour_id=?"
-            );
-            $stmt->execute([
-                (int)($post['day_number'] ?? 1),
-                trim($post['activity_time'] ?? '08:00'),
-                trim($post['end_time'] ?? ''),
-                trim($post['slot'] ?? ''),
-                trim($post['title'] ?? ''),
-                trim($post['details'] ?? ''),
-                trim($post['meal_plan'] ?? ''),
-                $itemId,
-                $tourId,
+            $this->itineraryItemModel->updateItem($itemId, $tourId, [
+                'day_number' => (int)($post['day_number'] ?? 1),
+                'activity_time' => trim($post['activity_time'] ?? '08:00'),
+                'end_time' => trim($post['end_time'] ?? ''),
+                'slot' => trim($post['slot'] ?? ''),
+                'title' => trim($post['title'] ?? ''),
+                'details' => trim($post['details'] ?? ''),
+                'meal_plan' => trim($post['meal_plan'] ?? ''),
             ]);
         } catch (Exception $e) { /* ignore */ }
         header('Location: ' . BASE_URL . '?r=tours_itinerary&id=' . $tourId);
@@ -205,11 +201,154 @@ class TourController
         require __DIR__ . '/../views/tours/index.php';
     }
 
+    public function show($id)
+    {
+        $id = (int)$id;
+        $tour = $this->tourModel->find($id);
+        if (!$tour) { header('Location: ' . BASE_URL . '?r=tours'); exit; }
+        $types = $this->types; $statuses = $this->statuses;
+        $category = $this->categoryModel->find($tour['category_id'] ?? 0);
+        $price = $this->priceModel->getByTour($id);
+        if (!$price && isset($tour['price'])) { $price = ['adult_price'=>(float)$tour['price'],'child_price'=>0,'infant_price'=>0]; }
+        $gallery = $this->imageModel->getByTour($id);
+        $itineraries = $this->itineraryModel->getByTour($id);
+        $items = $this->itineraryItemModel->getByTour($id);
+        $supplierMain = null; if (!empty($tour['supplier_id'])) { try { $supplierMain = (new SupplierModel())->find($tour['supplier_id']); } catch (Throwable $e) {} }
+        $supplierServices = [];
+        try {
+            $pdo = (new \BaseModel())->getConnection();
+            $sql = "SELECT s.id, s.name, s.type, s.phone, s.email, te.expense_type AS service_type, te.description AS service_description
+                    FROM tour_expenses te JOIN suppliers s ON te.supplier_id = s.id
+                    WHERE te.tour_id = ? AND te.is_actual_cost = 0 AND te.amount = 0 ORDER BY s.name";
+            $stmt = $pdo->prepare($sql); $stmt->execute([$id]);
+            $supplierServices = $stmt->fetchAll();
+            foreach ($supplierServices as &$r){
+                $r['name_clean'] = trim((string)($r['name'] ?? ''));
+                $r['status_parsed'] = null;
+                if (!empty($r['service_description']) && stripos($r['service_description'], 'service:') === 0) {
+                    $r['service_description'] = substr($r['service_description'], 8);
+                }
+                if (preg_match('/^(.*?)\s*\[[^:]*:\s*(\w+)\]/i', (string)$r['name'], $m)) {
+                    $r['name_clean'] = trim($m[1]);
+                    $r['status_parsed'] = strtolower($m[2]);
+                } elseif (!empty($r['service_description']) && preg_match('/\[[^:]*:\s*(\w+)\]/i', (string)$r['service_description'], $m2)) {
+                    $r['status_parsed'] = strtolower($m2[1]);
+                }
+                // Loại bỏ các tag dạng [CONFIRM:xxx] hoặc các tag trong [] khỏi mô tả
+                if (!empty($r['service_description'])) {
+                    $r['service_description'] = preg_replace('/\s*\[[^\]]*\]\s*/', '', (string)$r['service_description']);
+                }
+            }
+            unset($r);
+        } catch (Throwable $e) {}
+        $policy = null;
+        try {
+            $pdo = (new \BaseModel())->getConnection();
+            $stmt = $pdo->prepare("SELECT cp.name, cp.refund_percentage, cp.description FROM tours t LEFT JOIN cancellation_policies cp ON t.cancellation_policy_id = cp.id WHERE t.id = ?");
+            $stmt->execute([$id]); $policy = $stmt->fetch();
+        } catch (Throwable $e) {}
+
+        // Dashboard data: schedules, bookings, stats
+        $schedules = [];
+        try {
+            $pdoSch = (new \BaseModel())->getConnection();
+            $stmtSch = $pdoSch->prepare("SELECT ts.*, ug.full_name AS guide_name, ud.full_name AS driver_name
+                                          FROM tour_schedules ts
+                                          LEFT JOIN users ug ON ts.guide_user_id = ug.id
+                                          LEFT JOIN users ud ON ts.driver_user_id = ud.id
+                                          WHERE ts.tour_id = ? ORDER BY ts.start_date DESC");
+            $stmtSch->execute([$id]);
+            $schedules = $stmtSch->fetchAll();
+        } catch (Throwable $e) { $schedules = []; }
+        $totalRuns = is_array($schedules) ? count($schedules) : 0;
+        $totalPassengers = 0; $totalRevenue = 0.0; $bookings = [];
+        try {
+            $pdo2 = (new \BaseModel())->getConnection();
+            $stmtPax = $pdo2->prepare("SELECT COALESCE(SUM(b.total_guests),0) AS pax
+                                        FROM bookings b
+                                        JOIN tour_schedules ts ON b.schedule_id = ts.id
+                                        WHERE ts.tour_id = ? AND (b.booking_status IS NULL OR b.booking_status != 'canceled')");
+            $stmtPax->execute([$id]);
+            $totalPassengers = (int)($stmtPax->fetchColumn() ?: 0);
+
+            $stmtRev = $pdo2->prepare("SELECT COALESCE(SUM(b.total_price),0) AS revenue
+                                       FROM bookings b
+                                       JOIN tour_schedules ts ON b.schedule_id = ts.id
+                                       WHERE ts.tour_id = ? AND b.booking_status = 'confirmed'");
+            $stmtRev->execute([$id]);
+            $totalRevenue = (float)($stmtRev->fetchColumn() ?: 0);
+
+            $stmtBk = $pdo2->prepare("SELECT b.*, u.full_name AS customer_name, ts.start_date, ts.end_date
+                                       FROM bookings b
+                                       JOIN tour_schedules ts ON b.schedule_id = ts.id
+                                       LEFT JOIN users u ON b.customer_user_id = u.id
+                                       WHERE ts.tour_id = ?
+                                       ORDER BY b.id DESC");
+            $stmtBk->execute([$id]);
+            $bookings = $stmtBk->fetchAll();
+        } catch (Throwable $e) {}
+
+        $tourActive = !in_array(($tour['status'] ?? ''), ['closed','finished'], true);
+
+        // Trend metrics (last 30 days vs previous 30 days)
+        $runsTrendPct = 0.0; $paxTrendPct = 0.0; $revTrendPct = 0.0;
+        try {
+            $pdoT = (new \BaseModel())->getConnection();
+            $curStart = (new \DateTime('now'))->modify('-30 days')->format('Y-m-d');
+            $curEnd = (new \DateTime('now'))->format('Y-m-d');
+            $prevStart = (new \DateTime('now'))->modify('-60 days')->format('Y-m-d');
+            $prevEnd = (new \DateTime('now'))->modify('-31 days')->format('Y-m-d');
+
+            $stmtRunsCur = $pdoT->prepare("SELECT COUNT(*) FROM tour_schedules WHERE tour_id = ? AND DATE(start_date) BETWEEN ? AND ?");
+            $stmtRunsCur->execute([$id, $curStart, $curEnd]);
+            $runsCur = (int)$stmtRunsCur->fetchColumn();
+            $stmtRunsPrev = $pdoT->prepare("SELECT COUNT(*) FROM tour_schedules WHERE tour_id = ? AND DATE(start_date) BETWEEN ? AND ?");
+            $stmtRunsPrev->execute([$id, $prevStart, $prevEnd]);
+            $runsPrev = (int)$stmtRunsPrev->fetchColumn();
+            $runsTrendPct = ($runsPrev > 0) ? (($runsCur - $runsPrev) / $runsPrev * 100.0) : (($runsCur > 0) ? 100.0 : 0.0);
+
+            $stmtPaxCur = $pdoT->prepare("SELECT COALESCE(SUM(b.total_guests),0) FROM bookings b JOIN tour_schedules ts ON b.schedule_id = ts.id WHERE ts.tour_id = ? AND (b.booking_status IS NULL OR b.booking_status != 'canceled') AND DATE(b.date_booked) BETWEEN ? AND ?");
+            $stmtPaxCur->execute([$id, $curStart, $curEnd]);
+            $paxCur = (int)$stmtPaxCur->fetchColumn();
+            $stmtPaxPrev = $pdoT->prepare("SELECT COALESCE(SUM(b.total_guests),0) FROM bookings b JOIN tour_schedules ts ON b.schedule_id = ts.id WHERE ts.tour_id = ? AND (b.booking_status IS NULL OR b.booking_status != 'canceled') AND DATE(b.date_booked) BETWEEN ? AND ?");
+            $stmtPaxPrev->execute([$id, $prevStart, $prevEnd]);
+            $paxPrev = (int)$stmtPaxPrev->fetchColumn();
+            $paxTrendPct = ($paxPrev > 0) ? (($paxCur - $paxPrev) / $paxPrev * 100.0) : (($paxCur > 0) ? 100.0 : 0.0);
+
+            $stmtRevCur = $pdoT->prepare("SELECT COALESCE(SUM(b.total_price),0) FROM bookings b JOIN tour_schedules ts ON b.schedule_id = ts.id WHERE ts.tour_id = ? AND b.booking_status = 'confirmed' AND DATE(b.date_booked) BETWEEN ? AND ?");
+            $stmtRevCur->execute([$id, $curStart, $curEnd]);
+            $revCur = (float)$stmtRevCur->fetchColumn();
+            $stmtRevPrev = $pdoT->prepare("SELECT COALESCE(SUM(b.total_price),0) FROM bookings b JOIN tour_schedules ts ON b.schedule_id = ts.id WHERE ts.tour_id = ? AND b.booking_status = 'confirmed' AND DATE(b.date_booked) BETWEEN ? AND ?");
+            $stmtRevPrev->execute([$id, $prevStart, $prevEnd]);
+            $revPrev = (float)$stmtRevPrev->fetchColumn();
+            $revTrendPct = ($revPrev > 0.0) ? (($revCur - $revPrev) / $revPrev * 100.0) : (($revCur > 0.0) ? 100.0 : 0.0);
+        } catch (Throwable $e) {}
+
+        $stats = [
+            'totalRuns' => $totalRuns,
+            'totalPassengers' => $totalPassengers,
+            'totalRevenue' => $totalRevenue,
+            'tourActive' => $tourActive,
+            'runsTrendPct' => $runsTrendPct,
+            'paxTrendPct' => $paxTrendPct,
+            'revTrendPct' => $revTrendPct,
+            'tourCode' => !empty($tour['code'] ?? '') ? (string)$tour['code'] : ('T-' . (int)$tour['id']),
+            'frontendUrl' => BASE_URL . '?r=tours_show&id=' . (int)$id,
+        ];
+
+        // no driver map needed, names already joined
+
+        require __DIR__ . '/../views/tours/show.php';
+    }
+
     public function create()
     {
         $tour = null;
         $categories = $this->categoryModel->all();
         $suppliers = $this->supplierModel->all();
+        // Master suppliers from `suppliers` table for service mapping
+        try { $supplierMaster = (new SupplierModel())->getAll(); } catch (Throwable $e) { $supplierMaster = []; }
+        $tourSuppliers = [];
         $itineraries = [];
         $itineraryItems = [];
         $price = ['adult_price' => 0, 'child_price' => 0, 'infant_price' => 0];
@@ -333,6 +472,8 @@ class TourController
         }
         $categories = $this->categoryModel->all();
         $suppliers = $this->supplierModel->all();
+        // Master suppliers from `suppliers` table for service mapping
+        try { $supplierMaster = (new SupplierModel())->getAll(); } catch (Throwable $e) { $supplierMaster = []; }
         $itineraries = $this->itineraryModel->getByTour($id);
         $itineraryItems = $this->itineraryItemModel->getByTour($id);
         $price = $this->priceModel->getByTour($id) ?? ['adult_price' => 0, 'child_price' => 0, 'infant_price' => 0];
@@ -345,6 +486,26 @@ class TourController
         // Lấy danh sách chính sách hủy
         $stmt = (new \BaseModel())->getConnection()->query("SELECT id, name, refund_percentage FROM cancellation_policies WHERE is_active = 1 ORDER BY name");
         $cancellationPolicies = $stmt->fetchAll();
+
+        // Prefill tour supplier services from tour_expenses (amount=0, is_actual_cost=0 OR any)
+        try {
+            $pdo = (new \BaseModel())->getConnection();
+            $q = $pdo->prepare("SELECT te.supplier_id, te.expense_type AS service_type, te.description 
+                                FROM tour_expenses te 
+                                WHERE te.tour_id = ? AND te.is_actual_cost = 0 AND te.amount = 0");
+            $q->execute([(int)$id]);
+            $tourSuppliers = $q->fetchAll();
+            // Loại bỏ prefix 'service:' nếu còn
+            foreach ($tourSuppliers as &$ts) {
+                if (!empty($ts['description']) && stripos($ts['description'], 'service:') === 0) {
+                    $ts['description'] = substr($ts['description'], 8);
+                }
+                if (!empty($ts['description'])) {
+                    $ts['description'] = preg_replace('/\s*\[[^\]]*\]\s*/', '', (string)$ts['description']);
+                }
+            }
+            unset($ts);
+        } catch (Throwable $e) { $tourSuppliers = []; }
 
         require __DIR__ . '/../views/tours/form.php';
     }
@@ -381,8 +542,11 @@ class TourController
         $this->tourModel->update($id, $payload);
         $this->storeRelations($id);
 
-        if (!empty($_POST['remove_images'])) {
-            $this->imageModel->removeByIds($_POST['remove_images']);
+        $removeIdsRaw = $_POST['remove_images'] ?? [];
+        if (is_string($removeIdsRaw)) { $removeIdsRaw = [$removeIdsRaw]; }
+        $removeIds = array_values(array_filter($removeIdsRaw, function($v){ return preg_match('/^\d+$/', (string)$v) && (int)$v > 0; }));
+        if (!empty($removeIds)) {
+            $this->imageModel->removeByIds($removeIds);
         }
 
         if (!empty($_FILES['gallery']['name'])) {
@@ -423,12 +587,12 @@ class TourController
             $this->imageModel->deleteByTour($id);
             
             // Set flash message và redirect
-            $_SESSION['flash_success'] = $result['message'];
+            flash_set('success', $result['message']);
             header('Location: ' . BASE_URL . '?r=tours');
             exit;
         } else {
             // Nếu không thể xóa, set flash message và redirect back
-            $_SESSION['flash_error'] = $result['message'];
+            flash_set('danger', $result['message']);
             header('Location: ' . $_SERVER['HTTP_REFERER']);
             exit;
         }
@@ -465,7 +629,9 @@ class TourController
                 'activities' => trim($itineraryActivities[$index] ?? ''),
             ];
         }
-        $this->itineraryModel->replace($tourId, $itineraryPayload);
+        if (!empty($itineraryPayload)) {
+            $this->itineraryModel->replace($tourId, $itineraryPayload);
+        }
 
         // Lưu lịch trình chi tiết theo khung giờ nếu được nhập từ form tour
         $detailDays   = $_POST['it_item_day'] ?? [];
@@ -474,7 +640,7 @@ class TourController
         $detailSlots  = $_POST['it_item_slot'] ?? [];
         $detailTitles = $_POST['it_item_title'] ?? [];
         $detailNotes  = $_POST['it_item_details'] ?? [];
-        $detailMeals  = $_POST['it_item_meal'] ?? [];
+        $detailMeals  = $_POST['it_item_location'] ?? [];
 
         $detailItems = [];
         foreach ($detailDays as $i => $day) {
@@ -499,13 +665,11 @@ class TourController
         }
 
         try {
-            // Xóa chi tiết cũ rồi ghi lại danh sách mới nếu có
-            $this->itineraryItemModel->deleteByTour($tourId);
             if (!empty($detailItems)) {
+                $this->itineraryItemModel->deleteByTour($tourId);
                 $this->itineraryItemModel->addBulk($tourId, $detailItems);
             }
         } catch (Exception $e) {
-            // Không để lỗi lịch trình chi tiết chặn việc lưu tour
         }
 
         $prices = [
@@ -514,6 +678,64 @@ class TourController
             'infant_price' => (float)($_POST['infant_price'] ?? 0),
         ];
         $this->priceModel->upsert($tourId, $prices);
+
+        // Lưu ánh xạ NCC dịch vụ cho tour → dùng bảng tour_expenses (amount=0, is_actual_cost=0)
+        $tsSupplierIds = $_POST['ts_supplier_id'] ?? [];
+        $tsServiceTypes = $_POST['ts_service_type'] ?? [];
+        $tsDescriptions = $_POST['ts_description'] ?? [];
+        $allowedServices = ['hotel','restaurant','transport','ticket','insurance'];
+        try {
+            $pdo = (new \BaseModel())->getConnection();
+            // Xóa ánh xạ cũ (amount=0, is_actual_cost=0) theo loại dịch vụ cho tour
+            $in = implode(',', array_fill(0, count($allowedServices), '?'));
+            $sqlDel = "DELETE FROM tour_expenses WHERE tour_id = ? AND is_actual_cost = 0 AND amount = 0 AND expense_type IN ($in)";
+            $del = $pdo->prepare($sqlDel);
+            $paramsDel = array_merge([(int)$tourId], $allowedServices);
+            $del->execute($paramsDel);
+            // Chèn lại theo form
+            foreach ($tsSupplierIds as $i => $sid) {
+                $sid = (int)$sid;
+                $stype = trim($tsServiceTypes[$i] ?? '');
+                if ($sid <= 0 || $stype === '' || !in_array($stype, $allowedServices, true)) { continue; }
+                $desc = trim($tsDescriptions[$i] ?? '');
+                // Bỏ prefix 'service:' nếu người dùng paste từ dữ liệu cũ
+                if (stripos($desc, 'service:') === 0) { $desc = substr($desc, 8); }
+                $ins = $pdo->prepare("INSERT INTO tour_expenses (tour_id, supplier_id, expense_type, description, amount, is_actual_cost, date_incurred) VALUES (?,?,?,?,0,0,CURDATE())");
+                $ins->execute([(int)$tourId, $sid, $stype, $desc !== '' ? $desc : $stype]);
+            }
+        } catch (Throwable $e) {
+            // bỏ qua lỗi mapping để không chặn lưu tour
+        }
+    }
+
+    // API: Trả về danh sách NCC dịch vụ theo tour (dùng khi tạo booking)
+    public function suppliersJson()
+    {
+        $tourId = (int)($_GET['tour_id'] ?? 0);
+        header('Content-Type: application/json; charset=utf-8');
+        if ($tourId <= 0) { echo json_encode([]); exit; }
+        try {
+            $pdo = (new \BaseModel())->getConnection();
+            $sql = "SELECT s.id, s.name, s.type, s.phone, s.email, te.expense_type AS service_type, te.description AS service_description
+                    FROM tour_expenses te
+                    JOIN suppliers s ON te.supplier_id = s.id
+                    WHERE te.tour_id = ? AND te.is_actual_cost = 0 AND te.amount = 0
+                    ORDER BY s.name";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$tourId]);
+            $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            // Bỏ prefix 'service:' nếu còn
+            foreach ($rows as &$r) {
+                if (!empty($r['service_description']) && stripos($r['service_description'], 'service:') === 0) {
+                    $r['service_description'] = substr($r['service_description'], 8);
+                }
+            }
+            unset($r);
+            echo json_encode($rows);
+        } catch (Throwable $e) {
+            echo json_encode([]);
+        }
+        exit;
     }
 
     protected function validate($data, $ignoreId = null)

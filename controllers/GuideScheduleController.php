@@ -101,7 +101,7 @@ class GuideScheduleController
                                      WHERE guide_user_id = :gid AND schedule_date = :date");
         $stmt->execute([':gid' => $guideId, ':date' => $date]);
         if ($stmt->fetch()) {
-            $_SESSION['flash_error'] = 'HDV đã có lịch vào ngày này!';
+            flash_set('danger', 'HDV đã có lịch vào ngày này!');
             header('Location: ' . BASE_URL . '?r=guide_schedules_create');
             exit;
         }
@@ -121,9 +121,9 @@ class GuideScheduleController
         ]);
 
         if ($result) {
-            $_SESSION['flash_success'] = 'Tạo lịch làm việc thành công!';
+            flash_set('success', 'Tạo lịch làm việc thành công!');
         } else {
-            $_SESSION['flash_error'] = 'Có lỗi xảy ra!';
+            flash_set('danger', 'Có lỗi xảy ra!');
         }
 
         header('Location: ' . BASE_URL . '?r=guide_schedules&guide_id=' . $guideId);
@@ -144,7 +144,7 @@ class GuideScheduleController
         $schedule = $stmt->fetch();
 
         if (!$schedule) {
-            $_SESSION['flash_error'] = 'Không tìm thấy lịch làm việc!';
+            flash_set('danger', 'Không tìm thấy lịch làm việc!');
             header('Location: ' . BASE_URL . '?r=guide_schedules');
             exit;
         }
@@ -181,7 +181,7 @@ class GuideScheduleController
                                      WHERE guide_user_id = :gid AND schedule_date = :date AND id != :id");
         $stmt->execute([':gid' => $guideId, ':date' => $date, ':id' => $id]);
         if ($stmt->fetch()) {
-            $_SESSION['flash_error'] = 'HDV đã có lịch vào ngày này!';
+            flash_set('danger', 'HDV đã có lịch vào ngày này!');
             header('Location: ' . BASE_URL . '?r=guide_schedules_edit&id=' . $id);
             exit;
         }
@@ -204,9 +204,9 @@ class GuideScheduleController
         ]);
 
         if ($result) {
-            $_SESSION['flash_success'] = 'Cập nhật lịch làm việc thành công!';
+            flash_set('success', 'Cập nhật lịch làm việc thành công!');
         } else {
-            $_SESSION['flash_error'] = 'Có lỗi xảy ra!';
+            flash_set('danger', 'Có lỗi xảy ra!');
         }
 
         header('Location: ' . BASE_URL . '?r=guide_schedules&guide_id=' . $guideId);
@@ -228,9 +228,9 @@ class GuideScheduleController
         $result = $stmt->execute([':id' => $id]);
 
         if ($result) {
-            $_SESSION['flash_success'] = 'Xóa lịch làm việc thành công!';
+            flash_set('warning', 'Xóa lịch làm việc thành công!');
         } else {
-            $_SESSION['flash_error'] = 'Có lỗi xảy ra!';
+            flash_set('danger', 'Có lỗi xảy ra!');
         }
 
         $redirectUrl = BASE_URL . '?r=guide_schedules';
@@ -257,7 +257,7 @@ class GuideScheduleController
         $notes = $_POST['notes'] ?? '';
 
         if (empty($startDate) || empty($endDate) || $guideId === 0) {
-            $_SESSION['flash_error'] = 'Vui lòng điền đầy đủ thông tin!';
+            flash_set('danger', 'Vui lòng điền đầy đủ thông tin!');
             header('Location: ' . BASE_URL . '?r=guide_schedules&guide_id=' . $guideId);
             exit;
         }
@@ -296,10 +296,10 @@ class GuideScheduleController
         }
 
         if ($successCount > 0) {
-            $_SESSION['flash_success'] = "Đã tạo $successCount lịch làm việc thành công!";
+            flash_set('success', "Đã tạo $successCount lịch làm việc thành công!");
         }
         if ($errorCount > 0) {
-            $_SESSION['flash_error'] = "$errorCount ngày đã có lịch hoặc có lỗi!";
+            flash_set('danger', "$errorCount ngày đã có lịch hoặc có lỗi!");
         }
 
         header('Location: ' . BASE_URL . '?r=guide_schedules&guide_id=' . $guideId);

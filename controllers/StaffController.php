@@ -42,6 +42,11 @@ class StaffController {
             header('Location: ' . BASE_URL . '?r=staff');
             exit;
         }
+        if (!csrf_validate($_POST['csrf_token'] ?? '')) {
+            flash_set('danger', 'CSRF token không hợp lệ.');
+            header('Location: ' . BASE_URL . '?r=staff_create');
+            exit;
+        }
 
         try {
             // Handle avatar upload
@@ -74,12 +79,14 @@ class StaffController {
                 $_POST['status'] ?? 1
             ]);
             
-            header('Location: ' . BASE_URL . '?r=staff&created=1');
+            flash_set('success', 'Đã tạo nhân sự');
+            header('Location: ' . BASE_URL . '?r=staff');
             exit;
             
         } catch(Exception $e) {
             error_log("Error creating staff: " . $e->getMessage());
-            header('Location: ' . BASE_URL . '?r=staff_create&error=' . urlencode($e->getMessage()));
+            flash_set('danger', 'Tạo nhân sự thất bại: ' . $e->getMessage());
+            header('Location: ' . BASE_URL . '?r=staff_create');
             exit;
         }
     }
@@ -106,6 +113,11 @@ class StaffController {
     public function update($id){
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASE_URL . '?r=staff');
+            exit;
+        }
+        if (!csrf_validate($_POST['csrf_token'] ?? '')) {
+            flash_set('danger', 'CSRF token không hợp lệ.');
+            header('Location: ' . BASE_URL . '?r=staff_edit&id=' . $id);
             exit;
         }
 
@@ -158,27 +170,36 @@ class StaffController {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             
-            header('Location: ' . BASE_URL . '?r=staff&updated=1');
+            flash_set('success', 'Đã cập nhật nhân sự');
+            header('Location: ' . BASE_URL . '?r=staff');
             exit;
             
         } catch(Exception $e) {
             error_log("Error updating staff: " . $e->getMessage());
-            header('Location: ' . BASE_URL . '?r=staff_edit&id=' . $id . '&error=' . urlencode($e->getMessage()));
+            flash_set('danger', 'Cập nhật nhân sự thất bại: ' . $e->getMessage());
+            header('Location: ' . BASE_URL . '?r=staff_edit&id=' . $id);
             exit;
         }
     }
 
     public function delete($id){
+        if (!csrf_validate($_GET['csrf_token'] ?? '')) {
+            flash_set('danger', 'CSRF token không hợp lệ.');
+            header('Location: ' . BASE_URL . '?r=staff');
+            exit;
+        }
         try {
             $pdo = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME, DB_USERNAME, DB_PASSWORD);
             $stmt = $pdo->prepare("DELETE FROM users WHERE id = ? AND role != 'guide'");
             $stmt->execute([$id]);
             
-            header('Location: ' . BASE_URL . '?r=staff&deleted=1');
+            flash_set('warning', 'Đã xóa nhân sự');
+            header('Location: ' . BASE_URL . '?r=staff');
             exit;
         } catch(Exception $e) {
             error_log("Error deleting staff: " . $e->getMessage());
-            header('Location: ' . BASE_URL . '?r=staff&error=' . urlencode($e->getMessage()));
+            flash_set('danger', 'Xóa nhân sự thất bại: ' . $e->getMessage());
+            header('Location: ' . BASE_URL . '?r=staff');
             exit;
         }
     }
@@ -200,13 +221,13 @@ class StaffController {
             // Thêm data cho user 16
             $stmt->execute([16, '001234567892', 'domestic', 'HDV-2024014', 'Tiếng Việt, English', 4, 'Miền Nam Việt Nam, TP.HCM', 'Sức khỏe tốt', 'HDV miền Nam chuyên nghiệp']);
             
-            // Redirect back with success message
-            header('Location: ' . BASE_URL . '?r=staff&fixed=1');
+            flash_set('info', 'Đã sửa dữ liệu');
+            header('Location: ' . BASE_URL . '?r=staff');
             exit;
             
         } catch(Exception $e) {
-            // Redirect back with error message
-            header('Location: ' . BASE_URL . '?r=staff&error=' . urlencode($e->getMessage()));
+            flash_set('danger', 'Sửa dữ liệu thất bại: ' . $e->getMessage());
+            header('Location: ' . BASE_URL . '?r=staff');
             exit;
         }
     }

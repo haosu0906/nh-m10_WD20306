@@ -129,7 +129,7 @@ class GuideAssignmentController
         $notes = $_POST['notes'] ?? '';
 
         if ($tourId <= 0 || $guideUserId <= 0) {
-            $_SESSION['flash_error'] = 'Vui lòng chọn tour và hướng dẫn viên';
+            flash_set('danger', 'Vui lòng chọn tour và hướng dẫn viên');
             header('Location: ' . BASE_URL . '?r=guide_assignments_create');
             exit;
         }
@@ -139,7 +139,7 @@ class GuideAssignmentController
                                      WHERE tour_id = :tid AND guide_user_id = :gid AND assignment_date = :ad");
         $stmt->execute([':tid' => $tourId, ':gid' => $guideUserId, ':ad' => $assignmentDate]);
         if ($stmt->fetch()) {
-            $_SESSION['flash_error'] = 'HDV này đã được phân công cho lịch này!';
+            flash_set('danger', 'HDV này đã được phân công cho lịch này!');
             header('Location: ' . BASE_URL . '?r=guide_assignments_create');
             exit;
         }
@@ -168,16 +168,16 @@ class GuideAssignmentController
                     ':notes' => $notes
                 ]);
             } catch (PDOException $e2) {
-                $_SESSION['flash_error'] = 'Lỗi lưu phân công: ' . $e2->getMessage();
+                flash_set('danger', 'Lỗi lưu phân công: ' . $e2->getMessage());
                 header('Location: ' . BASE_URL . '?r=guide_assignments_create');
                 exit;
             }
         }
 
         if ($result) {
-            $_SESSION['flash_success'] = 'Phân công HDV thành công!';
+            flash_set('success', 'Phân công HDV thành công!');
         } else {
-            $_SESSION['flash_error'] = 'Có lỗi xảy ra!';
+            flash_set('danger', 'Có lỗi xảy ra!');
         }
 
         header('Location: ' . BASE_URL . '?r=guide_assignments');
@@ -208,7 +208,7 @@ class GuideAssignmentController
         }
 
         if (!$assignment) {
-            $_SESSION['flash_error'] = 'Không tìm thấy phân công!';
+            flash_set('danger', 'Không tìm thấy phân công!');
             header('Location: ' . BASE_URL . '?r=guide_assignments');
             exit;
         }
@@ -269,7 +269,7 @@ class GuideAssignmentController
                                      WHERE tour_id = :tid AND guide_user_id = :gid AND assignment_date = :ad AND id != :id");
         $stmt->execute([':tid' => $tourId, ':gid' => $guideUserId, ':ad' => $assignmentDate, ':id' => $id]);
         if ($stmt->fetch()) {
-            $_SESSION['flash_error'] = 'HDV này đã được phân công cho lịch này!';
+            flash_set('danger', 'HDV này đã được phân công cho lịch này!');
             header('Location: ' . BASE_URL . '?r=guide_assignments_edit&id=' . $id);
             exit;
         }
@@ -313,9 +313,9 @@ class GuideAssignmentController
         }
 
         if ($result) {
-            $_SESSION['flash_success'] = 'Cập nhật phân công thành công!';
+            flash_set('success', 'Cập nhật phân công thành công!');
         } else {
-            $_SESSION['flash_error'] = 'Có lỗi xảy ra!';
+            flash_set('danger', 'Có lỗi xảy ra!');
         }
 
         header('Location: ' . BASE_URL . '?r=guide_assignments');
@@ -331,9 +331,9 @@ class GuideAssignmentController
         $result = $stmt->execute([':id' => $id]);
 
         if ($result) {
-            $_SESSION['flash_success'] = 'Xóa phân công thành công!';
+            flash_set('warning', 'Xóa phân công thành công!');
         } else {
-            $_SESSION['flash_error'] = 'Có lỗi xảy ra!';
+            flash_set('danger', 'Có lỗi xảy ra!');
         }
 
         header('Location: ' . BASE_URL . '?r=guide_assignments');

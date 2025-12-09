@@ -23,7 +23,7 @@
   <h1>Booking #<?= htmlspecialchars($item['id'] ?? '') ?></h1>
   <div class="section">
     <strong>Khách hàng:</strong> <?= htmlspecialchars($customer['full_name'] ?? '') ?><br>
-    <strong>Phone:</strong> <?= htmlspecialchars($customer['phone'] ?? '') ?><br>
+    <strong>Điện thoại:</strong> <?= htmlspecialchars($customer['phone'] ?? '') ?><br>
     <strong>Email:</strong> <?= htmlspecialchars($customer['email'] ?? '') ?><br>
   </div>
 
@@ -39,7 +39,7 @@
         }
       }
     ?>
-    <strong>HDV phụ trách:</strong> <?= htmlspecialchars($guideName ?: 'N/A') ?><br>
+    <strong>HDV phụ trách:</strong> <?= htmlspecialchars($guideName ?: 'Không có') ?><br>
     <strong>Tổng tiền:</strong> <?= number_format($item['total_price'] ?? 0,0,',','.') ?> đ
   </div>
 
@@ -47,7 +47,7 @@
     <strong>Danh sách hành khách (<?= count($guests) ?>):</strong>
     <table>
       <thead>
-        <tr><th>STT</th><th>Họ tên</th><th>Năm sinh</th><th>Loại</th><th>Ký nhận</th><th>QR/Link</th></tr>
+        <tr><th>STT</th><th>Họ tên</th><th>Năm sinh</th><th>Loại</th><th>Ký nhận</th><th>QR/Liên kết</th></tr>
       </thead>
       <tbody>
         <?php foreach($guests as $i=>$g): ?>
@@ -61,7 +61,7 @@
             <?php $checkinLink = BASE_URL . '?r=booking_guest_checkin&booking_id=' . (int)($item['id'] ?? 0) . '&guest_id=' . (int)($g['id'] ?? 0) . '&checked=1&stage=gather';
                   $qrUrl = BASE_URL . '?r=qr&size=84&data=' . urlencode($checkinLink); ?>
             <img src="<?= $qrUrl ?>" alt="QR" style="width:84px;height:84px"><br>
-            <a href="<?= $checkinLink ?>" target="_blank" class="muted">Check-in</a>
+            <a href="<?= $checkinLink ?>" target="_blank" class="muted">Check‑in</a>
           </td>
         </tr>
         <?php endforeach; ?>
@@ -74,10 +74,13 @@
     <table>
       <thead><tr><th>Tên</th><th>Loại</th><th>Điện thoại</th></tr></thead>
       <tbody>
-        <?php foreach($suppliers as $s): ?>
+        <?php 
+          $map = ['hotel'=>'Khách sạn','restaurant'=>'Nhà hàng','transport'=>'Vận chuyển','ticket'=>'Vé tham quan','attraction'=>'Điểm tham quan','insurance'=>'Bảo hiểm','guide'=>'HDV','meal'=>'Ăn uống','entertain'=>'Giải trí','other'=>'Dịch vụ khác'];
+          foreach($suppliers as $s): 
+        ?>
         <tr>
           <td><?= htmlspecialchars($s['name'] ?? '') ?></td>
-          <td><?= htmlspecialchars($s['type'] ?? '') ?></td>
+          <td><?= htmlspecialchars($map[strtolower($s['type'] ?? '')] ?? ($s['type'] ?? '')) ?></td>
           <td><?= htmlspecialchars($s['phone'] ?? '') ?></td>
         </tr>
         <?php endforeach; ?>

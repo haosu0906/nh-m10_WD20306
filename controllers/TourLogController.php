@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../models/TourLogModel.php';
 require_once __DIR__ . '/../models/TourModel.php';
+require_once __DIR__ . '/../models/UserModel.php';
 
 class TourLogController
 {
@@ -14,24 +15,72 @@ class TourLogController
 
     public function index()
     {
-        $guideId = $_GET['guide_id'] ?? null;
+        $guideId = isset($_GET['guide_id']) ? (int)$_GET['guide_id'] : null;
         $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : null;
         if (!$guideId && !empty($_SESSION['guide_user_id'])) {
             $guideId = (int)$_SESSION['guide_user_id'];
         }
+        $from = isset($_GET['from']) ? $_GET['from'] : null;
+        $to = isset($_GET['to']) ? $_GET['to'] : null;
 
-        $logs = [];
-        if ($guideId) {
-            if ($tourId) {
-                $logs = $this->logModel->getByGuideAndTour((int)$guideId, $tourId);
-            } else {
-                $logs = $this->logModel->getByGuide($guideId);
-            }
-        } elseif ($tourId) {
-            $logs = $this->logModel->getByTour($tourId);
-        }
+        $logs = $this->logModel->search($guideId, $tourId, $from, $to);
+
+        $tourModel = new TourModel();
+        $tours = $tourModel->all();
+        $userModel = new UserModel();
+        $guides = $userModel->getGuides();
 
         require __DIR__ . '/../views/tour_logs/index.php';
+    }
+
+    public function export()
+    {
+        $type = $_GET['type'] ?? 'csv';
+        $guideId = isset($_GET['guide_id']) ? (int)$_GET['guide_id'] : null;
+        $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : null;
+        $from = isset($_GET['from']) ? $_GET['from'] : null;
+        $to = isset($_GET['to']) ? $_GET['to'] : null;
+        $rows = $this->logModel->search($guideId, $tourId, $from, $to);
+
+        if ($type === 'csv') {
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename="tour_logs.csv"');
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Tour', 'HDV', 'Thời điểm', 'Sự kiện', 'Phản hồi', 'Thời tiết']);
+            foreach ($rows as $r) {
+                fputcsv($out, [
+                    $r['tour_title'] ?? '',
+                    $r['guide_name'] ?? '',
+                    $r['log_date'] ?? '',
+                    $r['incident_details'] ?? '',
+                    $r['customer_feedback'] ?? '',
+                    $r['weather'] ?? ''
+                ]);
+            }
+            fclose($out);
+            exit;
+        } else {
+            echo '<!doctype html><html><head><meta charset="utf-8"><title>In Nhật ký tour</title>';
+            echo '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />';
+            echo '</head><body class="p-4">';
+            echo '<h4 class="mb-3">Danh sách nhật ký tour</h4>';
+            echo '<table class="table table-bordered"><thead><tr>';
+            echo '<th>Tour</th><th>HDV</th><th>Thời điểm</th><th>Sự kiện</th><th>Phản hồi</th><th>Thời tiết</th>';
+            echo '</tr></thead><tbody>';
+            foreach ($rows as $r) {
+                echo '<tr>';
+                echo '<td>' . htmlspecialchars($r['tour_title'] ?? '') . '</td>';
+                echo '<td>' . htmlspecialchars($r['guide_name'] ?? '') . '</td>';
+                echo '<td>' . htmlspecialchars($r['log_date'] ?? '') . '</td>';
+                echo '<td>' . htmlspecialchars($r['incident_details'] ?? '') . '</td>';
+                echo '<td>' . htmlspecialchars($r['customer_feedback'] ?? '') . '</td>';
+                echo '<td>' . htmlspecialchars($r['weather'] ?? '') . '</td>';
+                echo '</tr>';
+            }
+            echo '</tbody></table>';
+            echo '</body></html>';
+            exit;
+        }
     }
 
     public function create()
