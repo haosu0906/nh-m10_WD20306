@@ -2,7 +2,7 @@
 // Helper functions (flash helper tự động gọi session_start() khi cần)
 require_once __DIR__ . '/../helpers/flash.php';
 
-define('BASE_URL',          'http://localhost/duan1/nh-m10_WD20306/');
+define('BASE_URL',          'http://localhost/nh-m10_WD20306/nh-m10_WD20306/');
 
 // Thư mục gốc của project: nh-m10_WD20306/
 define('PATH_ROOT',         __DIR__ . '/../..' . '/');

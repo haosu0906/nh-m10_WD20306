@@ -47,7 +47,7 @@
     .schedules-grid-container {
         background: white;
         border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         overflow: hidden;
     }
 
@@ -65,7 +65,7 @@
 
     .schedules-grid-header-cell {
         padding: 16px 12px;
-        border-right: 1px solid rgba(255,255,255,0.1);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
         display: flex;
         align-items: center;
         justify-content: flex-start;
@@ -233,6 +233,7 @@
 
     /* Responsive */
     @media (max-width: 1400px) {
+
         .schedules-grid-header,
         .schedules-grid-row {
             grid-template-columns: 40px 180px 100px 100px 130px 100px 90px;
@@ -240,10 +241,12 @@
     }
 
     @media (max-width: 1200px) {
+
         .schedules-grid-header,
         .schedules-grid-row {
             grid-template-columns: 40px 160px 90px 90px 110px 90px 80px;
         }
+
         .schedules-grid-cell {
             font-size: 0.8rem;
             padding: 12px 8px;
@@ -286,14 +289,20 @@
                 <div class="schedules-grid-header-cell">Sức chứa</div>
                 <div class="schedules-grid-header-cell">Hành động</div>
             </div>
-            
+
             <!-- Grid Body -->
             <div class="schedules-grid-body">
                 <?php if(!empty($schedules)): foreach($schedules as $row): ?>
-                    <div class="schedules-grid-row">
-                        <!-- Checkbox Cell -->
-                        <div class="schedules-grid-cell schedules-checkbox-cell">
-                            <input type="checkbox" class="form-check-input">
+                <div class="schedules-grid-row">
+                    <!-- Checkbox Cell -->
+                    <div class="schedules-grid-cell schedules-checkbox-cell">
+                        <input type="checkbox" class="form-check-input">
+                    </div>
+
+                    <!-- Tour Cell -->
+                    <div class="schedules-grid-cell schedules-tour-cell">
+                        <div class="schedules-tour-icon">
+                            <i class="fas fa-route"></i>
                         </div>
                         
                         <!-- Tour Cell -->
@@ -372,21 +381,79 @@
                             </div>
                         </div>
                     </div>
-                <?php endforeach; else: ?>
-                    <div class="schedules-grid-empty">
-                        <div class="text-muted">
-                            <i class="fas fa-calendar fa-3x mb-3 opacity-50"></i>
-                            <h5>Chưa có lịch trình nào</h5>
-                            <p>Bắt đầu bằng cách tạo lịch trình đầu tiên</p>
-                            <a href="<?= BASE_URL ?>?r=schedules_create" class="btn btn-primary">
-                                <i class="fas fa-plus me-2"></i>Thêm lịch
+
+                    <!-- Start Date Cell -->
+                    <div class="schedules-grid-cell schedules-date-cell">
+                        <div class="schedules-date-value"><?= htmlspecialchars($row['start_date']) ?></div>
+                        <div class="schedules-date-label">Khởi hành</div>
+                    </div>
+
+                    <!-- End Date Cell -->
+                    <div class="schedules-grid-cell schedules-date-cell">
+                        <div class="schedules-date-value"><?= htmlspecialchars($row['end_date']) ?></div>
+                        <div class="schedules-date-label">Kết thúc</div>
+                    </div>
+
+                    <!-- Guide Cell -->
+                    <div class="schedules-grid-cell schedules-guide-cell">
+                        <?php if (!empty($row['guide_name'])): ?>
+                        <span class="schedules-guide-badge">
+                            <i class="fas fa-user-tie me-1"></i>
+                            <?= htmlspecialchars($row['guide_name']) ?>
+                        </span>
+                        <?php else: ?>
+                        <div class="schedules-guide-empty">
+                            <i class="fas fa-times me-1"></i>
+                            Chưa gán
+                        </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Capacity Cell -->
+                    <div class="schedules-grid-cell schedules-capacity-cell">
+                        <div class="schedules-capacity-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="schedules-capacity-info">
+                            <div class="schedules-capacity-value"><?= (int)($row['max_capacity'] ?? 0) ?></div>
+                            <div class="schedules-capacity-label">Hành khách</div>
+                        </div>
+                    </div>
+
+                    <!-- Actions Cell -->
+                    <div class="schedules-grid-cell schedules-actions-cell">
+                        <div class="btn-group" role="group">
+                            <a href="<?= BASE_URL ?>?r=schedules_edit&id=<?= (int)$row['id'] ?>"
+                                class="btn btn-sm btn-outline-primary" title="Sửa">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="<?= BASE_URL ?>?r=schedules_show&id=<?= (int)$row['id'] ?>"
+                                class="btn btn-sm btn-outline-info" title="Xem chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="<?= BASE_URL ?>?r=schedules_delete&id=<?= (int)$row['id'] ?>"
+                                class="btn btn-sm btn-outline-danger" onclick="return confirm('Xác nhận xóa lịch này?')"
+                                title="Xóa">
+                                <i class="fas fa-trash"></i>
                             </a>
                         </div>
                     </div>
+                </div>
+                <?php endforeach; else: ?>
+                <div class="schedules-grid-empty">
+                    <div class="text-muted">
+                        <i class="fas fa-calendar fa-3x mb-3 opacity-50"></i>
+                        <h5>Chưa có lịch trình nào</h5>
+                        <p>Bắt đầu bằng cách tạo lịch trình đầu tiên</p>
+                        <a href="<?= BASE_URL ?>?r=schedules_create" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Thêm lịch
+                        </a>
+                    </div>
+                </div>
                 <?php endif; ?>
             </div>
         </div>
-        
+
         <?php if(!empty($schedules)): ?>
         <div class="card border-0 shadow-sm mt-3">
             <div class="card-body">
